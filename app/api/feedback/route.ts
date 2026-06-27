@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from "next/server"
+import { z } from "zod"
 import { openai } from "@/lib/openai"
 import { buildPrompt, MOCK_FEEDBACK } from "@/lib/feedback"
 import { getLessonById } from "@/data/lessons"
-import { FeedbackResult } from "@/types/feedback"
+
+const FeedbackSchema = z.object({
+  praise: z.string(),
+  goodPoints: z.array(z.string()).length(2),
+  oneImprovement: z.string(),
+  example: z.string(),
+})
 
 export async function POST(req: NextRequest) {
   try {
@@ -27,8 +34,13 @@ export async function POST(req: NextRequest) {
     const content = response.choices[0].message.content
     if (!content) throw new Error("Empty response from OpenAI")
 
-    const feedback = JSON.parse(content) as FeedbackResult
-    return NextResponse.json(feedback)
+    const parsed = FeedbackSchema.safeParse(JSON.parse(content))
+    if (!parsed.success) {
+      console.error("Feedback validation failed:", parsed.error.issues)
+      return NextResponse.json(MOCK_FEEDBACK)
+    }
+
+    return NextResponse.json(parsed.data)
   } catch (err) {
     console.error("Feedback API error:", err)
     return NextResponse.json(MOCK_FEEDBACK)

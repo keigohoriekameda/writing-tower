@@ -2,6 +2,8 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
+`.env.local` を作成し、`OPENAI_API_KEY` を設定してください（`.env.local.example` を参照）。
+
 First, run the development server:
 
 ```bash
