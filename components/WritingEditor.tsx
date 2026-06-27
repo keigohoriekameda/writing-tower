@@ -63,12 +63,12 @@ export default function WritingEditor({ lesson }: Props) {
 
   return (
     <div className="flex flex-col gap-5">
+      <WritingScaffold />
+
       <div className="rounded-2xl bg-indigo-50 p-5">
         <p className="text-xs font-semibold uppercase tracking-widest text-indigo-400">Question</p>
         <p className="mt-2 text-sm leading-relaxed text-indigo-800">{lesson.prompt}</p>
       </div>
-
-      <WritingScaffold />
 
       <textarea
         value={text}
