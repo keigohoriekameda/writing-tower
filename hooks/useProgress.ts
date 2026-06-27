@@ -1,27 +1,24 @@
 "use client"
 
-import { useSyncExternalStore, useCallback } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Progress } from "@/types/progress"
 import { loadProgress, saveProgress, addCompletedDay } from "@/lib/mockProgress"
 
-const PROGRESS_EVENT = "writing-tower-progress-update"
-
-function subscribe(callback: () => void): () => void {
-  window.addEventListener(PROGRESS_EVENT, callback)
-  return () => window.removeEventListener(PROGRESS_EVENT, callback)
-}
-
-const emptyProgress: Progress = { completedDays: [] }
-
 export function useProgress() {
-  const progress = useSyncExternalStore(subscribe, loadProgress, () => emptyProgress)
+  const [progress, setProgress] = useState<Progress>({ completedDays: [] })
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setProgress(loadProgress())
+  }, [])
 
   const completeDay = useCallback((day: number) => {
-    const current = loadProgress()
-    const next = addCompletedDay(current, day)
-    if (next === current) return
-    saveProgress(next)
-    window.dispatchEvent(new Event(PROGRESS_EVENT))
+    setProgress((prev) => {
+      const next = addCompletedDay(prev, day)
+      if (next === prev) return prev
+      saveProgress(next)
+      return next
+    })
   }, [])
 
   const isDayCompleted = useCallback(
