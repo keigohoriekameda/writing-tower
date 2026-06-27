@@ -11,13 +11,9 @@ export default function BuildingProgress({ completedDays, totalDays = 90 }: Prop
   return (
     <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
       <div className="mb-4">
-        <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">
-          Your Tower
-        </p>
+        <p className="text-xs font-bold tracking-wider text-gray-400">あなたのタワー</p>
         <p className="mt-1 text-sm font-semibold text-gray-700">
-          {completedDays > 0
-            ? `${completedDays} floor${completedDays !== 1 ? "s" : ""} built`
-            : "Ready to build"}
+          {completedDays > 0 ? `${completedDays}階完成！` : "建設開始！"}
         </p>
       </div>
 
@@ -27,14 +23,12 @@ export default function BuildingProgress({ completedDays, totalDays = 90 }: Prop
 
       {completedDays === 0 && (
         <p className="mt-3 text-center text-xs text-gray-400">
-          Complete Day 1 to lay the first floor!
+          Day 1をクリアすると1階が完成します！
         </p>
       )}
 
       {isComplete && (
-        <p className="mt-3 text-center text-sm font-semibold text-green-600">
-          Tower Complete!
-        </p>
+        <p className="mt-3 text-center text-sm font-bold text-green-600">タワー完成！🎉</p>
       )}
     </div>
   )

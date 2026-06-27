@@ -2,12 +2,13 @@ import { FeedbackResult } from "@/types/feedback"
 import { Lesson } from "@/types/lesson"
 
 export const MOCK_FEEDBACK: FeedbackResult = {
-  praise: "Great effort! You wrote a clear opinion with a good structure.",
+  praise: "よく書けています！意見が明確で、文章の構成もしっかりしていますよ。",
   goodPoints: [
-    "Your opening sentence states your position clearly.",
-    "You used connecting words like 'also' and 'because' effectively.",
+    "最初の文で自分の意見をはっきり伝えられています。",
+    "「also」や「because」などの接続語を上手に使えています。",
   ],
-  oneImprovement: "Try to add a specific example or real situation to make your second reason stronger.",
+  oneImprovement:
+    "2つ目の理由に具体的な例を加えると、さらに説得力が増しますよ。",
   example:
     "For instance: 'For example, when students forget a textbook, they can quickly access the material online without missing the lesson.'",
   isMock: true,
@@ -27,17 +28,18 @@ Your job is to give warm, coach-style feedback — not grades or scores. Focus o
 
 Respond with ONLY a valid JSON object in this exact format:
 {
-  "praise": "A short, genuine 1-sentence compliment about the essay overall.",
+  "praise": "短く温かい1文の全体コメント（日本語で）",
   "goodPoints": [
-    "First specific strength (1 sentence)",
-    "Second specific strength (1 sentence)"
+    "1つ目の具体的な良い点（日本語で1文）",
+    "2つ目の具体的な良い点（日本語で1文）"
   ],
-  "oneImprovement": "Exactly one improvement suggestion, stated gently and constructively (1–2 sentences).",
-  "example": "A concrete rewritten example sentence or phrase that shows the improvement in action."
+  "oneImprovement": "改善提案を1つだけ、優しく前向きに（日本語で1〜2文）",
+  "example": "A concrete rewritten example sentence in English that shows the improvement in action."
 }
 
 Rules:
-- Always respond in English
+- praise, goodPoints, oneImprovement must be written in Japanese
+- example must be written in English (it is a model sentence for the student to learn from)
 - praise must be warm and specific, not generic
 - goodPoints must have exactly 2 items
 - oneImprovement must be exactly 1 suggestion only — never list more

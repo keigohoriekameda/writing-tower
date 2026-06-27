@@ -1,11 +1,13 @@
 import { lessons } from "@/data/lessons"
 import LessonCard from "@/components/LessonCard"
 import BuildingProgressClient from "@/components/BuildingProgressClient"
+import WelcomeCard from "@/components/WelcomeCard"
+import DailyMessage from "@/components/DailyMessage"
 
 export default function Home() {
   return (
     <main className="mx-auto flex min-h-screen max-w-lg flex-col px-6 py-14">
-      <header className="mb-10">
+      <header className="mb-8">
         <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-indigo-400">
           HK Education · AI Learning Series
         </p>
@@ -13,8 +15,16 @@ export default function Home() {
         <p className="mt-1 text-sm text-gray-400">Build Your Future.</p>
       </header>
 
-      <div className="mb-8">
+      <div className="mb-6">
+        <WelcomeCard />
+      </div>
+
+      <div className="mb-2">
         <BuildingProgressClient />
+      </div>
+
+      <div className="mb-6">
+        <DailyMessage />
       </div>
 
       <section>
