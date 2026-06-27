@@ -5,13 +5,16 @@ import Link from "next/link"
 import { FeedbackResult } from "@/types/feedback"
 import { useProgress } from "@/hooks/useProgress"
 import Building from "@/components/Building"
+import PhraseOfDay from "@/components/PhraseOfDay"
+import BuildingCheck from "@/components/BuildingCheck"
 
 type Props = {
   feedback: FeedbackResult
+  essay: string
   day: number
 }
 
-export default function FeedbackView({ feedback, day }: Props) {
+export default function FeedbackView({ feedback, essay, day }: Props) {
   const { completeDay, progress } = useProgress()
 
   useEffect(() => {
@@ -51,13 +54,13 @@ export default function FeedbackView({ feedback, day }: Props) {
         <p className="mt-2 text-sm leading-relaxed text-gray-700">{feedback.oneImprovement}</p>
       </div>
 
-      {/* ④ Example */}
-      <div className="rounded-2xl border border-gray-100 bg-gray-50 p-5">
-        <p className="text-xs font-bold tracking-wider text-gray-400">改善例</p>
-        <p className="mt-2 text-sm italic leading-relaxed text-gray-600">{feedback.example}</p>
-      </div>
+      {/* ④ Today's Phrase */}
+      <PhraseOfDay />
 
-      {/* ⑤ Building Completion */}
+      {/* ⑤ Building Check */}
+      <BuildingCheck essay={essay} />
+
+      {/* ⑥ Building Completion */}
       <div className="rounded-2xl bg-green-50 p-6 text-center">
         <div className="mb-3 flex justify-center">
           <Building

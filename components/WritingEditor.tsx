@@ -49,7 +49,7 @@ export default function WritingEditor({ lesson }: Props) {
   }
 
   if (state.status === "feedback") {
-    return <FeedbackView feedback={state.data} day={lesson.day} />
+    return <FeedbackView feedback={state.data} essay={text} day={lesson.day} />
   }
 
   if (state.status === "error") {
