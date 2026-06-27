@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
-import { openai } from "@/lib/openai"
+import { getOpenAI } from "@/lib/openai"
 import { buildPrompt, MOCK_FEEDBACK } from "@/lib/feedback"
 import { getLessonById } from "@/data/lessons"
 
@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(MOCK_FEEDBACK)
     }
 
-    const response = await openai.chat.completions.create({
+    const response = await getOpenAI().chat.completions.create({
       model: "gpt-4o-mini",
       messages: [{ role: "user", content: buildPrompt(lesson, essay) }],
       response_format: { type: "json_object" },

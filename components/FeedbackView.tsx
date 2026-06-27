@@ -1,5 +1,10 @@
+"use client"
+
+import { useEffect } from "react"
 import Link from "next/link"
 import { FeedbackResult } from "@/types/feedback"
+import { useProgress } from "@/hooks/useProgress"
+import Building from "@/components/Building"
 
 type Props = {
   feedback: FeedbackResult
@@ -7,6 +12,12 @@ type Props = {
 }
 
 export default function FeedbackView({ feedback, day }: Props) {
+  const { completeDay, progress } = useProgress()
+
+  useEffect(() => {
+    completeDay(day)
+  }, [day, completeDay])
+
   return (
     <div className="flex flex-col gap-5">
       {feedback.isMock && (
@@ -54,8 +65,14 @@ export default function FeedbackView({ feedback, day }: Props) {
 
       {/* ⑤ Building Completion */}
       <div className="rounded-2xl bg-green-50 p-6 text-center">
-        <p className="text-2xl">🏗️</p>
-        <p className="mt-2 text-sm font-semibold text-green-700">Day {day} Complete!</p>
+        <div className="flex justify-center mb-3">
+          <Building
+            currentFloor={progress.completedDays.length}
+            totalFloors={90}
+            animated
+          />
+        </div>
+        <p className="text-sm font-semibold text-green-700">Day {day} Complete!</p>
         <p className="mt-1 text-xs text-green-500">Your tower is growing. Keep building.</p>
       </div>
 
