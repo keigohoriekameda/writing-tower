@@ -1,8 +1,15 @@
 "use client"
 
 import { useState } from "react"
-import Link from "next/link"
 import { Lesson } from "@/types/lesson"
+import { FeedbackResult } from "@/types/feedback"
+import FeedbackView from "@/components/FeedbackView"
+
+type State =
+  | { status: "idle" }
+  | { status: "loading" }
+  | { status: "feedback"; data: FeedbackResult }
+  | { status: "error"; message: string }
 
 function countWords(text: string): number {
   return text.trim() === "" ? 0 : text.trim().split(/\s+/).length
@@ -14,26 +21,42 @@ type Props = {
 
 export default function WritingEditor({ lesson }: Props) {
   const [text, setText] = useState("")
-  const [submitted, setSubmitted] = useState(false)
+  const [state, setState] = useState<State>({ status: "idle" })
 
   const wordCount = countWords(text)
   const isReady = wordCount >= lesson.wordCount.min && wordCount <= lesson.wordCount.max
 
-  if (submitted) {
+  async function handleSubmit() {
+    setState({ status: "loading" })
+    try {
+      const res = await fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lessonId: lesson.id, essay: text }),
+      })
+      if (!res.ok) throw new Error(`Server error: ${res.status}`)
+      const data = (await res.json()) as FeedbackResult
+      setState({ status: "feedback", data })
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Something went wrong."
+      setState({ status: "error", message })
+    }
+  }
+
+  if (state.status === "loading") {
+    return <LoadingView />
+  }
+
+  if (state.status === "feedback") {
+    return <FeedbackView feedback={state.data} day={lesson.day} />
+  }
+
+  if (state.status === "error") {
     return (
-      <div className="flex flex-col items-center gap-6 py-20 text-center">
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-100 text-2xl text-green-600">
-          ✓
-        </div>
-        <h2 className="text-2xl font-bold text-gray-900">Essay Submitted!</h2>
-        <p className="text-gray-500">Great work on Day {lesson.day}.</p>
-        <Link
-          href="/"
-          className="rounded-full bg-indigo-600 px-8 py-3 text-sm font-semibold text-white transition-colors hover:bg-indigo-700"
-        >
-          Back to Home
-        </Link>
-      </div>
+      <ErrorView
+        message={state.message}
+        onRetry={() => setState({ status: "idle" })}
+      />
     )
   }
 
@@ -53,13 +76,9 @@ export default function WritingEditor({ lesson }: Props) {
       />
 
       <div className="flex items-center justify-between">
-        <WordCountBadge
-          count={wordCount}
-          min={lesson.wordCount.min}
-          max={lesson.wordCount.max}
-        />
+        <WordCountBadge count={wordCount} min={lesson.wordCount.min} max={lesson.wordCount.max} />
         <button
-          onClick={() => setSubmitted(true)}
+          onClick={handleSubmit}
           disabled={!isReady}
           className="rounded-full bg-indigo-600 px-8 py-3 text-sm font-semibold text-white transition-colors hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400"
         >
@@ -70,15 +89,7 @@ export default function WritingEditor({ lesson }: Props) {
   )
 }
 
-function WordCountBadge({
-  count,
-  min,
-  max,
-}: {
-  count: number
-  min: number
-  max: number
-}) {
+function WordCountBadge({ count, min, max }: { count: number; min: number; max: number }) {
   const colorClass =
     count === 0
       ? "text-gray-400"
@@ -92,5 +103,34 @@ function WordCountBadge({
     <span className={`text-sm font-medium ${colorClass}`}>
       {count} / {min}–{max} words
     </span>
+  )
+}
+
+function LoadingView() {
+  return (
+    <div className="flex flex-col items-center gap-4 py-24">
+      <div className="h-8 w-8 animate-spin rounded-full border-2 border-indigo-200 border-t-indigo-600" />
+      <p className="text-sm text-gray-400">Your coach is reviewing your essay...</p>
+    </div>
+  )
+}
+
+function ErrorView({ message, onRetry }: { message: string; onRetry: () => void }) {
+  return (
+    <div className="flex flex-col items-center gap-5 py-20 text-center">
+      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-red-50 text-2xl text-red-400">
+        !
+      </div>
+      <div>
+        <p className="text-base font-semibold text-gray-800">Could not get feedback</p>
+        <p className="mt-1 text-sm text-gray-400">{message}</p>
+      </div>
+      <button
+        onClick={onRetry}
+        className="rounded-full border border-gray-200 px-6 py-2.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50"
+      >
+        Try Again
+      </button>
+    </div>
   )
 }
