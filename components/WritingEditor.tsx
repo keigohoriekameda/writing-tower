@@ -4,6 +4,7 @@ import { useState } from "react"
 import { Lesson } from "@/types/lesson"
 import { FeedbackResult } from "@/types/feedback"
 import FeedbackView from "@/components/FeedbackView"
+import WritingScaffold from "@/components/WritingScaffold"
 
 type State =
   | { status: "idle" }
@@ -66,6 +67,8 @@ export default function WritingEditor({ lesson }: Props) {
         <p className="text-xs font-semibold uppercase tracking-widest text-indigo-400">Question</p>
         <p className="mt-2 text-sm leading-relaxed text-indigo-800">{lesson.prompt}</p>
       </div>
+
+      <WritingScaffold />
 
       <textarea
         value={text}
