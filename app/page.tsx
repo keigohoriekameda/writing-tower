@@ -27,6 +27,11 @@ export default function Home() {
         <DailyMessage />
       </div>
 
+      <div className="mb-5 flex flex-col items-center gap-1 text-center">
+        <p className="text-sm font-bold text-gray-600">🎯 今日のミッション</p>
+        <p className="text-xs text-gray-400">👇 下のカードをタップして1階建設を始めよう！</p>
+      </div>
+
       <section>
         <h2 className="mb-4 text-xs font-semibold uppercase tracking-widest text-gray-400">
           Lessons
