@@ -1,11 +1,18 @@
 import { Progress } from "@/types/progress"
 
-const STORAGE_KEY = "writing-tower-progress"
+const STUDENT_ID_KEY = "writing-tower-student-id"
+
+function getProgressKey(): string {
+  const studentId = localStorage.getItem(STUDENT_ID_KEY)
+  return studentId ? `writing-tower-progress-${studentId}` : ""
+}
 
 export function loadProgress(): Progress {
   if (typeof window === "undefined") return { completedDays: [] }
+  const key = getProgressKey()
+  if (!key) return { completedDays: [] }
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
+    const raw = localStorage.getItem(key)
     return raw ? (JSON.parse(raw) as Progress) : { completedDays: [] }
   } catch {
     return { completedDays: [] }
@@ -13,8 +20,10 @@ export function loadProgress(): Progress {
 }
 
 export function saveProgress(progress: Progress): void {
+  const key = getProgressKey()
+  if (!key) return
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(progress))
+    localStorage.setItem(key, JSON.stringify(progress))
   } catch {
     // localStorage may be unavailable (private browsing, storage full, etc.)
   }

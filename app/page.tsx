@@ -2,15 +2,20 @@ import BuildingProgressClient from "@/components/BuildingProgressClient"
 import WelcomeCard from "@/components/WelcomeCard"
 import DailyMessage from "@/components/DailyMessage"
 import NextLessonClient from "@/components/NextLessonClient"
+import StudentGate, { StudentBadge } from "@/components/StudentGate"
 
 export default function Home() {
   return (
-    <main className="mx-auto flex min-h-screen max-w-lg flex-col px-6 py-14">
+    <StudentGate>
+      <main className="mx-auto flex min-h-screen max-w-lg flex-col px-6 py-14">
       <header className="mb-8">
         <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-indigo-400">
           HK Education · AI Learning Series
         </p>
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900">Writing Tower</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900">Writing Tower</h1>
+          <StudentBadge />
+        </div>
         <p className="mt-1 text-sm text-gray-400">Build Your Future.</p>
       </header>
 
@@ -40,5 +45,6 @@ export default function Home() {
         <NextLessonClient />
       </section>
     </main>
+    </StudentGate>
   )
 }
