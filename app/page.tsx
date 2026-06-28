@@ -16,7 +16,8 @@ export default function Home() {
           <h1 className="text-3xl font-bold tracking-tight text-gray-900">Writing Tower</h1>
           <StudentBadge />
         </div>
-        <p className="mt-1 text-sm text-gray-400">Build Your Future.</p>
+        <p className="mt-0.5 text-sm font-medium text-indigo-500">英検準2級ライティング</p>
+        <p className="mt-0.5 text-sm text-gray-400">Build Your Future.</p>
       </header>
 
       <div className="mb-6">
