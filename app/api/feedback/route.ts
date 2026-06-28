@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 import { getOpenAI } from "@/lib/openai"
-import { buildPrompt, MOCK_FEEDBACK } from "@/lib/feedback"
+import { buildPrompt, getMockFeedback } from "@/lib/feedback"
 import { getLessonById } from "@/data/lessons"
 
 const FeedbackSchema = z.object({
@@ -12,18 +12,18 @@ const FeedbackSchema = z.object({
 })
 
 export async function POST(req: NextRequest) {
+  const { lessonId, essay } = await req.json()
+
+  const lesson = getLessonById(lessonId)
+  if (!lesson) {
+    return NextResponse.json({ error: "Lesson not found" }, { status: 404 })
+  }
+
+  if (!process.env.OPENAI_API_KEY) {
+    return NextResponse.json(getMockFeedback(lesson))
+  }
+
   try {
-    const { lessonId, essay } = await req.json()
-
-    const lesson = getLessonById(lessonId)
-    if (!lesson) {
-      return NextResponse.json({ error: "Lesson not found" }, { status: 404 })
-    }
-
-    if (!process.env.OPENAI_API_KEY) {
-      return NextResponse.json(MOCK_FEEDBACK)
-    }
-
     const response = await getOpenAI().chat.completions.create({
       model: "gpt-4o-mini",
       messages: [{ role: "user", content: buildPrompt(lesson, essay) }],
@@ -37,12 +37,12 @@ export async function POST(req: NextRequest) {
     const parsed = FeedbackSchema.safeParse(JSON.parse(content))
     if (!parsed.success) {
       console.error("Feedback validation failed:", parsed.error.issues)
-      return NextResponse.json(MOCK_FEEDBACK)
+      return NextResponse.json(getMockFeedback(lesson))
     }
 
     return NextResponse.json(parsed.data)
   } catch (err) {
     console.error("Feedback API error:", err)
-    return NextResponse.json(MOCK_FEEDBACK)
+    return NextResponse.json(getMockFeedback(lesson))
   }
 }

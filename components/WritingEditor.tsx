@@ -5,6 +5,7 @@ import { Lesson } from "@/types/lesson"
 import { FeedbackResult } from "@/types/feedback"
 import FeedbackView from "@/components/FeedbackView"
 import WritingScaffold from "@/components/WritingScaffold"
+import EmailScaffold from "@/components/EmailScaffold"
 
 type State =
   | { status: "idle" }
@@ -63,7 +64,7 @@ export default function WritingEditor({ lesson }: Props) {
 
   return (
     <div className="flex flex-col gap-5">
-      <WritingScaffold />
+      {lesson.type === "email" ? <EmailScaffold /> : <WritingScaffold />}
 
       <div className="rounded-2xl bg-indigo-50 p-5">
         <p className="text-xs font-semibold uppercase tracking-widest text-indigo-400">Question</p>
