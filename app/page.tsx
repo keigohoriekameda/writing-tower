@@ -27,9 +27,13 @@ export default function Home() {
         <DailyMessage />
       </div>
 
-      <div className="mb-5 flex flex-col items-center gap-1 text-center">
-        <p className="text-sm font-bold text-gray-600">🎯 今日のミッション</p>
-        <p className="text-xs text-gray-400">👇 下のカードをタップして1階建設を始めよう！</p>
+      <div className="mb-5 rounded-2xl border border-dashed border-indigo-200 bg-gradient-to-br from-indigo-50 to-blue-50 px-5 py-4 text-center">
+        <p className="text-sm font-bold text-indigo-700">🎯 ✨ 今日のミッション！</p>
+        <p className="mt-1.5 text-sm leading-relaxed text-gray-600">
+          下のカードをタップして、
+          <br />
+          <span className="font-bold text-indigo-600">1階建設</span>を始めよう！ ↓
+        </p>
       </div>
 
       <section>
