@@ -1,8 +1,7 @@
-import { lessons } from "@/data/lessons"
-import LessonCard from "@/components/LessonCard"
 import BuildingProgressClient from "@/components/BuildingProgressClient"
 import WelcomeCard from "@/components/WelcomeCard"
 import DailyMessage from "@/components/DailyMessage"
+import NextLessonClient from "@/components/NextLessonClient"
 
 export default function Home() {
   return (
@@ -37,14 +36,8 @@ export default function Home() {
       </div>
 
       <section>
-        <h2 className="mb-4 text-xs font-semibold uppercase tracking-widest text-gray-400">
-          Lessons
-        </h2>
-        <div className="flex flex-col gap-3">
-          {lessons.map((lesson) => (
-            <LessonCard key={lesson.id} lesson={lesson} />
-          ))}
-        </div>
+        <h2 className="mb-4 text-xs font-bold tracking-wider text-gray-400">今日のレッスン</h2>
+        <NextLessonClient />
       </section>
     </main>
   )
