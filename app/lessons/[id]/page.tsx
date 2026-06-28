@@ -33,7 +33,7 @@ export default async function LessonPage({ params }: Props) {
 
         <div className="rounded-2xl bg-gray-50 p-5">
           <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">Question</p>
-          <p className="mt-2 text-base leading-relaxed text-gray-800">{lesson.prompt}</p>
+          <p className="mt-2 whitespace-pre-line text-base leading-relaxed text-gray-800">{lesson.prompt}</p>
         </div>
 
         <div className="flex gap-3 text-sm text-gray-400">

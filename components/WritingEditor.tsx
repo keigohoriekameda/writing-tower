@@ -67,7 +67,7 @@ export default function WritingEditor({ lesson }: Props) {
 
       <div className="rounded-2xl bg-indigo-50 p-5">
         <p className="text-xs font-semibold uppercase tracking-widest text-indigo-400">Question</p>
-        <p className="mt-2 text-sm leading-relaxed text-indigo-800">{lesson.prompt}</p>
+        <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-indigo-800">{lesson.prompt}</p>
       </div>
 
       <textarea
