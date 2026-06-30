@@ -83,6 +83,9 @@ export default function WritingEditor({ lesson }: Props) {
         onChange={(e) => setText(e.target.value)}
         placeholder={lesson.type === "email" ? "Write your email here..." : "Write your essay here..."}
         rows={10}
+        spellCheck={false}
+        autoCorrect="off"
+        autoCapitalize="off"
         className="w-full resize-none rounded-2xl border border-gray-200 bg-white p-4 text-sm leading-relaxed text-gray-900 placeholder-gray-300 transition-colors focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
       />
 
