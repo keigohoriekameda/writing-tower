@@ -24,7 +24,7 @@ export default function FeedbackView({ feedback, essay, day, answerExample }: Pr
 
   return (
     <div className="flex flex-col gap-5">
-      {feedback.isMock && (
+      {feedback.isMock && process.env.NODE_ENV === "development" && (
         <div className="rounded-xl bg-amber-50 px-4 py-2 text-xs text-amber-600">
           デモモード — .env.local に OPENAI_API_KEY を追加するとAIフィードバックが使えます。
         </div>

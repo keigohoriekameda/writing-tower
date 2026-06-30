@@ -81,7 +81,7 @@ export default function WritingEditor({ lesson }: Props) {
       <textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
-        placeholder="Write your essay here..."
+        placeholder={lesson.type === "email" ? "Write your email here..." : "Write your essay here..."}
         rows={10}
         className="w-full resize-none rounded-2xl border border-gray-200 bg-white p-4 text-sm leading-relaxed text-gray-900 placeholder-gray-300 transition-colors focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
       />
@@ -93,7 +93,7 @@ export default function WritingEditor({ lesson }: Props) {
           disabled={!isReady}
           className="rounded-full bg-indigo-600 px-8 py-3 text-sm font-semibold text-white transition-colors hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400"
         >
-          Submit Essay
+          {lesson.type === "email" ? "Send Email" : "Submit Essay"}
         </button>
       </div>
     </div>
