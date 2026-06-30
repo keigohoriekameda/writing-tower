@@ -9,4 +9,5 @@ export type Lesson = {
   prompt: string
   wordCount: { min: number; max: number }
   timeLimit: number
+  answerExample?: string
 }

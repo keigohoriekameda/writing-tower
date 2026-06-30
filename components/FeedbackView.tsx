@@ -12,9 +12,10 @@ type Props = {
   feedback: FeedbackResult
   essay: string
   day: number
+  answerExample?: string
 }
 
-export default function FeedbackView({ feedback, essay, day }: Props) {
+export default function FeedbackView({ feedback, essay, day, answerExample }: Props) {
   const { completeDay, progress } = useProgress()
 
   useEffect(() => {
@@ -60,7 +61,20 @@ export default function FeedbackView({ feedback, essay, day }: Props) {
       {/* ⑤ Building Check */}
       <BuildingCheck essay={essay} />
 
-      {/* ⑥ Building Completion */}
+      {/* ⑥ Answer Example */}
+      {answerExample && (
+        <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+          <p className="text-xs font-bold tracking-wider text-gray-400">📝 解答例</p>
+          <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-gray-600">
+            {answerExample}
+          </p>
+          <p className="mt-3 text-xs text-gray-400">
+            ※ 英作文にはさまざまな表現があります。これは解答例の一つです。
+          </p>
+        </div>
+      )}
+
+      {/* ⑦ Building Completion */}
       <div className="rounded-2xl bg-green-50 p-6 text-center">
         <div className="mb-3 flex justify-center">
           <Building
