@@ -7,6 +7,7 @@ import { useProgress } from "@/hooks/useProgress"
 import Building from "@/components/Building"
 import PhraseOfDay from "@/components/PhraseOfDay"
 import BuildingCheck from "@/components/BuildingCheck"
+import ReadAloudButton from "@/components/ReadAloudButton"
 
 type Props = {
   feedback: FeedbackResult
@@ -68,6 +69,8 @@ export default function FeedbackView({ feedback, essay, day, answerExample }: Pr
           <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-gray-600">
             {answerExample}
           </p>
+          <ReadAloudButton text={answerExample} />
+          <p className="mt-2 text-xs text-gray-400">声に出してマネしましょう！</p>
           <p className="mt-3 text-xs text-gray-400">
             ※ 英作文にはさまざまな表現があります。これは解答例の一つです。
           </p>
