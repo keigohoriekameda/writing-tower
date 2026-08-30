@@ -1,12 +1,15 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect } from "react"
+import { createContext, useContext, useState, useEffect, useCallback } from "react"
 
-const STUDENT_ID_KEY = "writing-tower-student-id"
+import { logout } from "@/actions/auth"
+import { completeDayCloud, getCloudProgress } from "@/actions/progress"
+import { addCompletedDay, loadProgress, saveProgress } from "@/lib/mockProgress"
+import { diffMissingDays, mergeProgress } from "@/lib/progress"
+import { Progress } from "@/types/progress"
 
 type StudentContextValue = {
   studentId: string
-  onSwitch: () => void
 }
 
 const StudentContext = createContext<StudentContextValue | null>(null)
@@ -18,106 +21,126 @@ export function useStudent(): StudentContextValue {
 }
 
 export function StudentBadge() {
-  const { studentId, onSwitch } = useStudent()
+  const { studentId } = useStudent()
   return (
     <div className="flex items-center gap-2">
       <span className="rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold text-indigo-700">
         {studentId}
       </span>
-      <button
-        onClick={onSwitch}
-        className="text-xs text-gray-400 transition-colors hover:text-gray-600"
-      >
-        切替
-      </button>
+      <form action={logout}>
+        <button
+          type="submit"
+          className="text-xs text-gray-400 transition-colors hover:text-gray-600"
+        >
+          ログアウト
+        </button>
+      </form>
     </div>
   )
 }
 
-type Props = { children: React.ReactNode }
+export type ProgressContextValue = {
+  progress: Progress
+  completeDay: (day: number) => void
+  isDayCompleted: (day: number) => boolean
+  isLoading: boolean
+  saveError: string | null
+}
 
-export default function StudentGate({ children }: Props) {
-  const [studentId, setStudentId] = useState<string | null>(null)
-  const [input, setInput] = useState("")
-  const [mounted, setMounted] = useState(false)
-  const [switching, setSwitching] = useState(false)
+export const ProgressContext = createContext<ProgressContextValue | null>(null)
+
+type Props = { loginId: string; children: React.ReactNode }
+
+export default function StudentGate({ loginId, children }: Props) {
+  const [progress, setProgress] = useState<Progress>({ completedDays: [] })
+  const [isLoading, setIsLoading] = useState(true)
+  const [saveError, setSaveError] = useState<string | null>(null)
 
   useEffect(() => {
-    const stored = localStorage.getItem(STUDENT_ID_KEY)
+    let cancelled = false
+    // ログインIDが変わることは通常無いが、切り替わった場合に前のユーザーの状態が
+    // 一瞬でも見えないよう読み込み中に戻す
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setStudentId(stored)
-    setMounted(true)
-  }, [])
+    setIsLoading(true)
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    const trimmed = input.trim().toLowerCase()
-    if (!trimmed) return
-    localStorage.setItem(STUDENT_ID_KEY, trimmed)
-    setStudentId(trimmed)
-    setInput("")
-    setSwitching(false)
-  }
+    async function sync() {
+      // 起動時はSupabaseを正とするが、取得が終わるまでの間や通信失敗時に
+      // Day1へ戻ってしまわないよう、ローカルキャッシュを先に表示しておく
+      const local = loadProgress(loginId)
+      if (!cancelled && local.completedDays.length > 0) {
+        setProgress(local)
+      }
 
-  function handleSwitch() {
-    setSwitching(true)
-    setInput("")
-  }
+      const result = await getCloudProgress()
+      if (cancelled) return
 
-  if (!mounted) return null
+      if (!result.ok) {
+        console.error("[progress] cloud fetch failed:", result.message)
+        setSaveError("進捗を取得できませんでした。オフラインのデータを表示しています。")
+        setProgress(local)
+        setIsLoading(false)
+        return
+      }
 
-  if (!studentId || switching) {
-    return (
-      <div className="flex min-h-screen items-center justify-center px-6">
-        <div className="w-full max-w-sm">
-          <div className="mb-8 text-center">
-            <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-indigo-400">
-              HK Education · AI Learning Series
-            </p>
-            <h1 className="text-2xl font-bold tracking-tight text-gray-900">Writing Tower</h1>
-            <p className="mt-1 text-sm text-gray-400">Build Your Future.</p>
-          </div>
+      // クラウドとローカルの進捗をunionし、より進んでいる方を残す（後退させない）
+      const merged = mergeProgress(local, result.progress)
+      setProgress(merged)
+      saveProgress(loginId, merged)
+      setIsLoading(false)
 
-          <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-            <p className="mb-1 text-sm font-bold text-gray-800">生徒IDを入力してください</p>
-            <p className="mb-4 text-xs text-gray-400">
-              例：s001, s002（先生から配布されたIDを入力）
-            </p>
-            <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-              <input
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder="例：s001"
-                autoFocus
-                className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 placeholder-gray-300 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
-              />
-              <button
-                type="submit"
-                disabled={!input.trim()}
-                className="h-12 rounded-full bg-indigo-600 text-sm font-semibold text-white transition-colors hover:bg-indigo-700 disabled:bg-gray-200 disabled:text-gray-400"
-              >
-                はじめる →
-              </button>
-              {switching && (
-                <button
-                  type="button"
-                  onClick={() => setSwitching(false)}
-                  className="text-center text-xs text-gray-400 underline"
-                >
-                  キャンセル
-                </button>
-              )}
-            </form>
-          </div>
-        </div>
-      </div>
-    )
-  }
+      // ローカルにのみ存在する完了Dayをクラウドへ反映する（例：ローカルDay5・クラウドDay3 → Day5までマージ）。
+      // クラウドの方が進んでいるDayは対象に含まれないため、クラウドを後退させることはない。
+      const missingInCloud = diffMissingDays(local, result.progress)
+      for (const day of missingInCloud) {
+        const pushResult = await completeDayCloud(day)
+        if (cancelled) return
+        if (!pushResult.ok) {
+          console.error(`[progress] failed to sync local day ${day} to cloud:`, pushResult.message)
+          setSaveError("一部の進捗をクラウドへ保存できませんでした。")
+        }
+      }
+    }
+
+    sync()
+
+    return () => {
+      cancelled = true
+    }
+  }, [loginId])
+
+  const completeDay = useCallback((day: number) => {
+    setProgress((prev) => {
+      const next = addCompletedDay(prev, day)
+      if (next === prev) return prev
+      saveProgress(loginId, next)
+      return next
+    })
+
+    completeDayCloud(day)
+      .then((result) => {
+        if (!result.ok) {
+          console.error(`[progress] failed to save day ${day} to cloud:`, result.message)
+          setSaveError("進捗を保存できませんでした。通信状態を確認してください。")
+        } else {
+          setSaveError(null)
+        }
+      })
+      .catch((err) => {
+        console.error(`[progress] unexpected error saving day ${day} to cloud:`, err)
+        setSaveError("進捗を保存できませんでした。通信状態を確認してください。")
+      })
+  }, [loginId])
+
+  const isDayCompleted = useCallback(
+    (day: number) => progress.completedDays.some((d) => d.day === day),
+    [progress],
+  )
 
   return (
-    <StudentContext.Provider value={{ studentId, onSwitch: handleSwitch }}>
-      <div key={studentId}>{children}</div>
+    <StudentContext.Provider value={{ studentId: loginId }}>
+      <ProgressContext.Provider value={{ progress, completeDay, isDayCompleted, isLoading, saveError }}>
+        {children}
+      </ProgressContext.Provider>
     </StudentContext.Provider>
   )
 }

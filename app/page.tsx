@@ -1,12 +1,19 @@
+import { redirect } from "next/navigation"
+
 import BuildingProgressClient from "@/components/BuildingProgressClient"
 import WelcomeCard from "@/components/WelcomeCard"
 import DailyMessage from "@/components/DailyMessage"
 import NextLessonClient from "@/components/NextLessonClient"
+import ProgressStatusBanner from "@/components/ProgressStatusBanner"
 import StudentGate, { StudentBadge } from "@/components/StudentGate"
+import { getCurrentUser } from "@/lib/auth/current-user"
 
-export default function Home() {
+export default async function Home() {
+  const session = await getCurrentUser()
+  if (!session) redirect("/login")
+
   return (
-    <StudentGate>
+    <StudentGate loginId={session.loginId}>
       <main className="mx-auto flex min-h-screen max-w-lg flex-col px-6 py-14">
       <header className="mb-8">
         <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-indigo-400">
@@ -19,6 +26,8 @@ export default function Home() {
         <p className="mt-0.5 text-sm font-medium text-indigo-500">英検準2級ライティング</p>
         <p className="mt-0.5 text-sm text-gray-400">Build Your Future.</p>
       </header>
+
+      <ProgressStatusBanner />
 
       <div className="mb-6">
         <WelcomeCard />

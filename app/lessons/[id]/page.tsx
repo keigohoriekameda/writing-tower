@@ -1,12 +1,16 @@
 import Link from "next/link"
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 import { getLessonById } from "@/data/lessons"
+import { getCurrentUser } from "@/lib/auth/current-user"
 
 type Props = {
   params: Promise<{ id: string }>
 }
 
 export default async function LessonPage({ params }: Props) {
+  const session = await getCurrentUser()
+  if (!session) redirect("/login")
+
   const { id } = await params
   const lesson = getLessonById(id)
 
