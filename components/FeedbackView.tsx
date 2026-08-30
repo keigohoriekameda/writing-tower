@@ -17,7 +17,7 @@ type Props = {
 }
 
 export default function FeedbackView({ feedback, essay, day, answerExample }: Props) {
-  const { completeDay, progress } = useProgress()
+  const { completeDay, progress, saveError } = useProgress()
 
   useEffect(() => {
     completeDay(day)
@@ -29,6 +29,10 @@ export default function FeedbackView({ feedback, essay, day, answerExample }: Pr
         <div className="rounded-xl bg-amber-50 px-4 py-2 text-xs text-amber-600">
           デモモード — .env.local に OPENAI_API_KEY を追加するとAIフィードバックが使えます。
         </div>
+      )}
+
+      {saveError && (
+        <div className="rounded-xl bg-red-50 px-4 py-2 text-xs text-red-600">{saveError}</div>
       )}
 
       {/* ① Praise */}

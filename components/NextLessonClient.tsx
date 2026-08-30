@@ -3,11 +3,12 @@
 import { useProgress } from "@/hooks/useProgress"
 import { lessons } from "@/data/lessons"
 import LessonCard from "@/components/LessonCard"
+import { getNextIncompleteDay } from "@/lib/progressSelectors"
 
 export default function NextLessonClient() {
   const { progress } = useProgress()
-  const currentFloor = progress.completedDays.length
-  const nextLesson = lessons[currentFloor]
+  const nextDay = getNextIncompleteDay(progress)
+  const nextLesson = lessons.find((l) => l.day === nextDay)
 
   if (!nextLesson) {
     return (
