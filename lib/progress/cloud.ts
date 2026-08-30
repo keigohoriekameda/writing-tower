@@ -14,7 +14,7 @@ export async function getCloudProgress(
 ): Promise<Progress> {
   const { data, error } = await supabase
     .from("wt_day_progress")
-    .select("day, completed_at")
+    .select("day_number, completed_at")
     .eq("user_id", userId)
     .eq("product_id", PRODUCT_CODE)
 
@@ -22,7 +22,7 @@ export async function getCloudProgress(
 
   return {
     completedDays: (data ?? []).map((row) => ({
-      day: row.day as number,
+      day: row.day_number as number,
       completedAt: row.completed_at as string,
     })),
   }
@@ -34,6 +34,6 @@ export async function getCloudProgress(
  * Throws on failure so callers can surface it instead of losing it.
  */
 export async function completeDayCloud(supabase: SupabaseClient, day: number): Promise<void> {
-  const { error } = await supabase.rpc("wt_complete_day", { p_day: day })
+  const { error } = await supabase.rpc("wt_complete_day", { p_day_number: day })
   if (error) throw error
 }

@@ -6,6 +6,8 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 進捗はSupabase（`wt_day_progress`テーブル）に保存されます。ログインには、Supabase側の `profiles` / `user_product_access` にWriting Tower（`product_code = 'writing-tower'`）へのアクセス権を持つアカウントが必要です。DBマイグレーションは `supabase/migrations/` を参照してください。
 
+`products`テーブルへの`writing-tower`行の登録はこのリポジトリでは行いません（`project-skyline-admin`の`20260724000000_seed_managed_products.sql`が既に担っているため、重複登録を避けています）。詳細はそちらのリポジトリの`docs/products-registration-notes.md`を参照してください。
+
 First, run the development server:
 
 ```bash

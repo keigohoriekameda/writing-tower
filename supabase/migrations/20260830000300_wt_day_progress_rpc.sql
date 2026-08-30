@@ -19,14 +19,16 @@ as $$
 $$;
 
 revoke all on function wt_check_product_access(uuid) from public;
+revoke all on function wt_check_product_access(uuid) from anon;
 grant execute on function wt_check_product_access(uuid) to authenticated;
 
--- Idempotently marks `p_day` complete for the calling user. Re-derives
--- auth.uid() itself (never trusts a client-supplied user id), re-checks
--- product access, and takes an advisory lock keyed on (user, day) so
--- concurrent duplicate submissions can't race each other.
-create or replace function wt_complete_day(p_day integer)
-returns table (day integer, completed_at timestamptz)
+-- Idempotently marks `p_day_number` complete for the calling user.
+-- Re-derives auth.uid() itself (never trusts a client-supplied user id,
+-- mirroring the shared complete_day() RPC's own v_user_id := auth.uid()
+-- pattern), re-checks product access, and takes an advisory lock keyed on
+-- (user, day) so concurrent duplicate submissions can't race each other.
+create or replace function wt_complete_day(p_day_number integer)
+returns table (day_number integer, completed_at timestamptz)
 language plpgsql
 security definer
 set search_path = public, pg_temp
@@ -38,28 +40,29 @@ begin
     raise exception 'authentication required';
   end if;
 
-  if p_day is null or p_day < 1 then
-    raise exception 'invalid day: %', p_day;
+  if p_day_number is null or p_day_number < 1 then
+    raise exception 'invalid day_number: %', p_day_number;
   end if;
 
   if not wt_check_product_access(v_user_id) then
     raise exception 'no active product access for writing-tower';
   end if;
 
-  perform pg_advisory_xact_lock(hashtextextended(v_user_id::text || ':day:' || p_day::text, 0));
+  perform pg_advisory_xact_lock(hashtextextended(v_user_id::text || ':day:' || p_day_number::text, 0));
 
-  insert into wt_day_progress (user_id, product_id, day)
-  values (v_user_id, 'writing-tower', p_day)
-  on conflict (user_id, product_id, day) do nothing;
+  insert into wt_day_progress (user_id, product_id, day_number)
+  values (v_user_id, 'writing-tower', p_day_number)
+  on conflict (user_id, product_id, day_number) do nothing;
 
   return query
-    select wdp.day, wdp.completed_at
+    select wdp.day_number, wdp.completed_at
     from wt_day_progress wdp
     where wdp.user_id = v_user_id
       and wdp.product_id = 'writing-tower'
-      and wdp.day = p_day;
+      and wdp.day_number = p_day_number;
 end;
 $$;
 
 revoke all on function wt_complete_day(integer) from public;
+revoke all on function wt_complete_day(integer) from anon;
 grant execute on function wt_complete_day(integer) to authenticated;
