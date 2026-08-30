@@ -2,7 +2,11 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
-`.env.local` を作成し、`OPENAI_API_KEY` を設定してください（`.env.local.example` を参照）。
+`.env.local` を作成し、`OPENAI_API_KEY` と Project Skyline共通Supabaseプロジェクトの接続情報（`NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` / `NEXT_PUBLIC_AUTH_INTERNAL_EMAIL_DOMAIN`）を設定してください（`.env.local.example` を参照）。
+
+進捗はSupabase（`wt_day_progress`テーブル）に保存されます。ログインには、Supabase側の `profiles` / `user_product_access` にWriting Tower（`product_code = 'writing-tower'`）へのアクセス権を持つアカウントが必要です。DBマイグレーションは `supabase/migrations/` を参照してください。
+
+`products`テーブルへの`writing-tower`行の登録はこのリポジトリでは行いません（`project-skyline-admin`の`20260724000000_seed_managed_products.sql`が既に担っているため、重複登録を避けています）。詳細はそちらのリポジトリの`docs/products-registration-notes.md`を参照してください。
 
 First, run the development server:
 
