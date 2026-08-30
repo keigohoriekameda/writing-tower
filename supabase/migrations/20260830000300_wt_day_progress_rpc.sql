@@ -50,9 +50,21 @@ begin
 
   perform pg_advisory_xact_lock(hashtextextended(v_user_id::text || ':day:' || p_day_number::text, 0));
 
+  -- ON CONFLICT (col, ...) is parsed via the index_elem grammar, which
+  -- admits expressions — so plpgsql's variable substitution applies there
+  -- and collides with the `day_number` OUT parameter from RETURNS TABLE
+  -- above (42702 "column reference ... is ambiguous"). Naming the
+  -- constraint instead sidesteps that: it's a plain identifier lookup,
+  -- not a column/expression context, so there's nothing for plpgsql to
+  -- confuse with the OUT parameter of the same name. Constraint name is
+  -- Postgres's default auto-generated name for the unnamed
+  -- `unique (user_id, product_id, day_number)` in
+  -- 20260830000100_wt_day_progress_schema.sql — confirmed against the
+  -- real table via `select conname from pg_constraint where conrelid =
+  -- 'wt_day_progress'::regclass and contype = 'u'`.
   insert into wt_day_progress (user_id, product_id, day_number)
   values (v_user_id, 'writing-tower', p_day_number)
-  on conflict (user_id, product_id, day_number) do nothing;
+  on conflict on constraint wt_day_progress_user_id_product_id_day_number_key do nothing;
 
   return query
     select wdp.day_number, wdp.completed_at
