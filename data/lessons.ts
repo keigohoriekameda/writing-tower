@@ -106,16 +106,21 @@ export const lessons: Lesson[] = [
     },
     comprehension: [
       {
-        question: "What new rule is the school thinking about?",
-        choices: ["a. No bikes at school", "b. Wearing a helmet when riding a bike", "c. A new school uniform"],
-        answerJa: "b(自転車通学の生徒にヘルメット着用を求めるルール)",
+        kind: "choice",
+        questionJa: "学校が検討している新しいルールは何ですか？",
+        choices: ["自転車を禁止する", "自転車に乗るときヘルメットを着用する", "新しい制服にする"],
+        correctIndex: 1,
+        explanationJa: "自転車通学の生徒にヘルメット着用を求めるルールです。",
       },
       {
-        question: "Does Mia agree with the rule?",
-        answerJa: "賛成している(a good idea だと言っている)",
+        kind: "choice",
+        questionJa: "Miaはこのルールに賛成していますか、反対していますか？",
+        choices: ["賛成している", "反対している"],
+        correctIndex: 0,
       },
       {
-        question: "Why does Mia think helmets are a good idea?",
+        kind: "reveal",
+        questionJa: "Miaがヘルメットを良いと思う理由は何ですか？",
         answerJa: "転んだ時に安全を守ってくれるから(helmets keep us safe if we fall)",
       },
     ],
@@ -125,21 +130,31 @@ export const lessons: Lesson[] = [
     ],
     guidedPractice: [
       {
+        kind: "wordOrder",
         instruction: "並べ替え",
-        prompt: "wear / should / helmets / students / a bike / when / they / ride",
+        tokens: ["wear", "should", "a helmet", "students", "a bike", "when", "they", "ride"],
+        correctOrder: [3, 1, 0, 2, 5, 6, 7, 4],
         answer: "Students should wear a helmet when they ride a bike.",
       },
       {
+        kind: "fillBlank",
         instruction: "空欄補充",
         prompt: "I think all students ___ wear a helmet.",
-        answer: "should",
+        choices: ["should", "is", "does"],
+        correctIndex: 0,
+        explanationJa: "「~すべきだ」は should を使うよ。",
       },
       {
+        kind: "fillBlank",
         instruction: "空欄補充",
         prompt: "___ ___ people say helmets look strange, but I think safety is more important.",
-        answer: "But some",
+        choices: ["But some", "So many", "And all"],
+        correctIndex: 0,
+        explanationJa: "軽く反対意見に触れるときは But some people say ~ を使うよ。",
       },
     ],
+    writingHintJa:
+      "自転車のヘルメット着用について、あなたの意見を書く問題です。まず反対意見にも軽く触れてから、自分の立場とその理由を2つ書きましょう。",
     prompt:
       "Some people think all students should wear a helmet when they ride a bike to school. Do you agree with this idea? First, mention what some people say. Then, write your opinion with two reasons.",
     wordCount: { min: 50, max: 80 },
@@ -160,9 +175,18 @@ export const lessons: Lesson[] = [
         "Hi,\nI have an idea! Why don't we go to Kyoto together during the holidays? We can visit temples and try Japanese sweets. What do you think?\n\nAlex",
     },
     comprehension: [
-      { question: "What is Alex suggesting?", answerJa: "一緒に京都へ旅行に行くこと" },
-      { question: "What does Alex want to do in Kyoto? (2 things)", answerJa: "お寺を訪れる/和菓子を食べる" },
-      { question: "What does Alex ask you at the end?", answerJa: "あなたがどう思うか(意見)" },
+      { kind: "reveal", questionJa: "Alexは何を提案していますか？", answerJa: "一緒に京都へ旅行に行くこと" },
+      {
+        kind: "reveal",
+        questionJa: "Alexは京都で何をしたいと言っていますか？(2つ)",
+        answerJa: "お寺を訪れる/和菓子を食べる",
+      },
+      {
+        kind: "choice",
+        questionJa: "Alexは最後に何を聞いていますか？",
+        choices: ["あなたの意見(どう思うか)", "あなたの誕生日", "あなたの学校名"],
+        correctIndex: 0,
+      },
     ],
     keyExpressions: [
       { phrase: "Why don't we ~?", meaningJa: "(一緒に)~しませんか(提案)" },
@@ -171,21 +195,29 @@ export const lessons: Lesson[] = [
     ],
     guidedPractice: [
       {
+        kind: "wordOrder",
         instruction: "並べ替え",
-        prompt: "why / go / the park / to / we / don't this weekend?",
+        tokens: ["go", "why", "the park", "to", "we", "don't", "this weekend?"],
+        correctOrder: [1, 5, 4, 0, 3, 2, 6],
         answer: "Why don't we go to the park this weekend?",
       },
       {
+        kind: "fillBlank",
         instruction: "空欄補充",
         prompt: "That ___ like fun! I would love to join you.",
-        answer: "sounds",
+        choices: ["sounds", "sound", "sounding"],
+        correctIndex: 0,
       },
       {
+        kind: "fillBlank",
         instruction: "空欄補充",
         prompt: "I ___ ___ to visit temples in Kyoto.",
-        answer: "would like",
+        choices: ["would like", "am like", "will liking"],
+        correctIndex: 0,
       },
     ],
+    writingHintJa:
+      "Alexからの旅行の誘いに返信するメールです。お礼を伝え、誘いに乗ることを伝えたうえで、自分からも新しい提案を1つ加えてみましょう。",
     prompt:
       "You received an email from your foreign friend, Alex.\n\nHi,\nI have an idea! Why don't we go to Kyoto together during the holidays? We can visit temples and try Japanese sweets. What do you think?\n\nAlex\n\nWrite an email to Alex. Thank him, say yes to the trip, and suggest one more thing you would like to do.",
     wordCount: { min: 50, max: 80 },
@@ -206,9 +238,18 @@ export const lessons: Lesson[] = [
         "Yui: I always study alone in my room. It's quiet, so I can concentrate.\nSora: Really? I like studying with friends. We can ask each other questions.\nYui: That's true, but sometimes we just talk and don't study!",
     },
     comprehension: [
-      { question: "Why does Yui like studying alone?", answerJa: "静かで集中できるから" },
-      { question: "What is good about studying with friends, according to Sora?", answerJa: "お互いに質問し合えること" },
-      { question: "What problem does Yui mention about studying with friends?", answerJa: "おしゃべりして勉強しなくなること" },
+      { kind: "reveal", questionJa: "Yuiが一人で勉強するのが好きな理由は何ですか？", answerJa: "静かで集中できるから" },
+      {
+        kind: "choice",
+        questionJa: "Soraによると、友達と勉強することの良い点は何ですか？",
+        choices: ["お互いに質問し合えること", "お菓子を食べられること", "早く終わること"],
+        correctIndex: 0,
+      },
+      {
+        kind: "reveal",
+        questionJa: "Yuiが指摘する、友達と勉強することの問題点は何ですか？",
+        answerJa: "おしゃべりして勉強しなくなること",
+      },
     ],
     keyExpressions: [
       { phrase: "I prefer A to B", meaningJa: "AよりBが好き" },
@@ -216,21 +257,30 @@ export const lessons: Lesson[] = [
     ],
     guidedPractice: [
       {
+        kind: "wordOrder",
         instruction: "並べ替え",
-        prompt: "to / I / studying alone / prefer / studying with friends",
+        tokens: ["to", "I", "studying alone", "prefer", "studying with friends"],
+        correctOrder: [1, 3, 2, 0, 4],
         answer: "I prefer studying alone to studying with friends.",
       },
       {
+        kind: "fillBlank",
         instruction: "空欄補充",
         prompt: "Studying with friends is fun. ___ ___ ___, it can be noisy.",
-        answer: "On the other hand",
+        choices: ["On the other hand", "For example", "Because of this"],
+        correctIndex: 0,
       },
       {
-        instruction: "自由記述",
-        prompt: "I prefer studying alone because ___.",
-        answer: "(自分の理由を1文で書く。例: it is quiet and I can concentrate.)",
+        kind: "fillBlank",
+        instruction: "空欄補充",
+        prompt: "I prefer studying alone because it is quiet and I can ___.",
+        choices: ["concentrate", "cook", "swim"],
+        correctIndex: 0,
+        explanationJa: "studying alone(一人で勉強すること)の良い点を選ぼう。",
       },
     ],
+    writingHintJa:
+      "一人で勉強するのと友達と勉強するの、どちらが自分に合っているかを考えて書く問題です。どちらか一方を選び、理由を書いたうえで、もう一方の側面にも軽く触れましょう。",
     prompt:
       "Which do you think is better for studying, studying alone or studying with friends? Choose one, give one reason, and briefly mention the other side using \"On the other hand\".",
     wordCount: { min: 50, max: 80 },
@@ -251,8 +301,13 @@ export const lessons: Lesson[] = [
         "Hi,\nI have a big test next week, and I'm really worried. I don't know how to study for it. Do you have any advice for me?\n\nAlex",
     },
     comprehension: [
-      { question: "What is Alex's situation?", answerJa: "来週大きなテストがあり、不安に思っている" },
-      { question: "What is Alex asking for?", answerJa: "勉強法についてのアドバイス" },
+      {
+        kind: "choice",
+        questionJa: "Alexは今どんな状況ですか？",
+        choices: ["来週大きなテストがあり不安に思っている", "旅行の予定を立てている", "部活で忙しい"],
+        correctIndex: 0,
+      },
+      { kind: "reveal", questionJa: "Alexは何を求めていますか？", answerJa: "勉強法についてのアドバイス" },
     ],
     keyExpressions: [
       { phrase: "Don't worry.", meaningJa: "心配しないで(励まし)" },
@@ -261,21 +316,29 @@ export const lessons: Lesson[] = [
     ],
     guidedPractice: [
       {
+        kind: "fillBlank",
         instruction: "空欄補充",
         prompt: "Don't worry. I think you ___ make a study schedule.",
-        answer: "should",
+        choices: ["should", "is", "did"],
+        correctIndex: 0,
       },
       {
+        kind: "wordOrder",
         instruction: "並べ替え",
-        prompt: "study / every day / you / will / feel / if / better",
+        tokens: ["study", "every day", "you", "will", "feel", "if", "better", "you"],
+        correctOrder: [5, 2, 0, 1, 7, 3, 4, 6],
         answer: "If you study every day, you will feel better.",
       },
       {
-        instruction: "選択式",
-        prompt: "友達を励ますときに使う表現はどちら? a. Don't worry. b. That's your problem.",
-        answer: "a",
+        kind: "fillBlank",
+        instruction: "選択",
+        prompt: "友達を励ますときに使う表現はどちらですか？",
+        choices: ["Don't worry.", "That's your problem."],
+        correctIndex: 0,
       },
     ],
+    writingHintJa:
+      "テスト前で不安になっている友達を励ますメールです。まず励ましの言葉をかけ、そのあとで勉強法のアドバイスを1つ伝えましょう。",
     prompt:
       "You received an email from your foreign friend, Alex.\n\nHi,\nI have a big test next week, and I'm really worried. I don't know how to study for it. Do you have any advice for me?\n\nAlex\n\nWrite an email to Alex. Encourage him and give him one piece of advice.",
     wordCount: { min: 50, max: 80 },
@@ -296,9 +359,18 @@ export const lessons: Lesson[] = [
         "Teacher: For your homework, you can use books or the Internet. Which one do you usually use?\nTaku: I usually use the Internet because it's fast. For example, I can find information in just a few seconds.\nTeacher: That's true. But books have good points too.",
     },
     comprehension: [
-      { question: "What can students use for their homework?", answerJa: "本またはインターネット" },
-      { question: "Which does Taku usually use, and why?", answerJa: "インターネット。速いから" },
-      { question: "What example does Taku give?", answerJa: "数秒で情報を見つけられること" },
+      {
+        kind: "choice",
+        questionJa: "生徒は宿題のために何を使ってよいですか？",
+        choices: ["本またはインターネット", "スマートフォンのみ", "友達のノートのみ"],
+        correctIndex: 0,
+      },
+      {
+        kind: "reveal",
+        questionJa: "Takuが普段使っているのはどちらですか？またその理由は？",
+        answerJa: "インターネット。速いから",
+      },
+      { kind: "reveal", questionJa: "Takuが挙げている具体例は何ですか？", answerJa: "数秒で情報を見つけられること" },
     ],
     keyExpressions: [
       { phrase: "for example", meaningJa: "例えば" },
@@ -306,21 +378,29 @@ export const lessons: Lesson[] = [
     ],
     guidedPractice: [
       {
+        kind: "fillBlank",
         instruction: "空欄補充",
         prompt: "The Internet is very useful. ___ ___, I can find news from all over the world in one second.",
-        answer: "For example",
+        choices: ["For example", "On the other hand", "But some"],
+        correctIndex: 0,
       },
       {
+        kind: "fillBlank",
         instruction: "空欄補充",
         prompt: "I think books are ___ ___ than the Internet because the information is often carefully checked.",
-        answer: "more useful",
+        choices: ["more useful", "less useful", "more famous"],
+        correctIndex: 0,
       },
       {
+        kind: "wordOrder",
         instruction: "並べ替え",
-        prompt: "is / than / the Internet / I think / more useful / books for studying English.",
+        tokens: ["than the Internet", "for studying English", "I think", "are", "more useful", "books"],
+        correctOrder: [2, 5, 3, 4, 0, 1],
         answer: "I think books are more useful than the Internet for studying English.",
       },
     ],
+    writingHintJa:
+      "本とインターネット、調べ物にはどちらが役立つかを考える問題です。どちらか一方を選び、具体例を1つ挙げながら理由を説明しましょう。",
     prompt:
       "Which do you think is more useful for studying, books or the Internet? Choose one, give one reason with an example using \"for example\", and briefly mention the good point of the other one.",
     wordCount: { min: 50, max: 80 },
@@ -341,8 +421,12 @@ export const lessons: Lesson[] = [
         "Hi,\nI heard your school had a school festival last week. How was it? What did you do?\n\nAlex",
     },
     comprehension: [
-      { question: "What is Alex asking about?", answerJa: "先週の文化祭がどうだったか" },
-      { question: "What two things does Alex want to know?", answerJa: "文化祭がどうだったか/何をしたか" },
+      { kind: "reveal", questionJa: "Alexは何について尋ねていますか？", answerJa: "先週の文化祭がどうだったか" },
+      {
+        kind: "reveal",
+        questionJa: "Alexが知りたいことは2つあります。それは何ですか？",
+        answerJa: "文化祭がどうだったか/何をしたか",
+      },
     ],
     keyExpressions: [
       { phrase: "We had ~ / I went to ~", meaningJa: "~があった/~に行った(過去形での出来事)" },
@@ -350,21 +434,29 @@ export const lessons: Lesson[] = [
     ],
     guidedPractice: [
       {
+        kind: "fillBlank",
         instruction: "動詞の形",
-        prompt: "My school (have) ___ a school festival last week.",
-        answer: "had",
+        prompt: "My school ___ a school festival last week.",
+        choices: ["had", "has", "having"],
+        correctIndex: 0,
       },
       {
+        kind: "fillBlank",
         instruction: "空欄補充",
         prompt: "It ___ a lot of fun because we sold snacks at our class shop.",
-        answer: "was",
+        choices: ["was", "is", "be"],
+        correctIndex: 0,
       },
       {
+        kind: "wordOrder",
         instruction: "並べ替え",
-        prompt: "part / the best / dance / was / our class / the",
+        tokens: ["our class dance", "was", "The best part"],
+        correctOrder: [2, 1, 0],
         answer: "The best part was our class dance.",
       },
     ],
+    writingHintJa:
+      "先週の文化祭について尋ねられたメールへの返信です。過去に起きたことを説明しながら、感想も伝えましょう。",
     prompt:
       "You received an email from your foreign friend, Alex.\n\nHi,\nI heard your school had a school festival last week. How was it? What did you do?\n\nAlex\n\nWrite an email to Alex about your school festival.",
     wordCount: { min: 50, max: 80 },
@@ -385,8 +477,13 @@ export const lessons: Lesson[] = [
         "Student council notice:\nWe are collecting students' opinions about smartphone use at school. Please tell us: Do you think students should be allowed to use smartphones at school? Give your reasons and one example.",
     },
     comprehension: [
-      { question: "What is the student council collecting?", answerJa: "スマホ使用についての意見" },
-      { question: "What does the notice ask you to include?", answerJa: "理由と具体例" },
+      {
+        kind: "choice",
+        questionJa: "生徒会が集めているものは何ですか？",
+        choices: ["スマホ使用についての意見", "文化祭の出し物のアイデア", "部活動の予算"],
+        correctIndex: 0,
+      },
+      { kind: "reveal", questionJa: "掲示物はあなたに何を含めるよう求めていますか？", answerJa: "理由と具体例" },
     ],
     keyExpressions: [
       { phrase: "In my opinion, ~ / Personally, I think ~", meaningJa: "私は~だと思う(意見表明のバリエーション)", reusedFromDay: 1 },
@@ -395,21 +492,29 @@ export const lessons: Lesson[] = [
     ],
     guidedPractice: [
       {
-        instruction: "選択式",
-        prompt: "「私は~だと思う」の別の言い方はどちら? a. In my opinion, ~ b. My opinion said ~",
-        answer: "a",
+        kind: "fillBlank",
+        instruction: "選択",
+        prompt: "「私は~だと思う」の別の言い方はどちらですか？",
+        choices: ["In my opinion, ~", "My opinion said ~"],
+        correctIndex: 0,
       },
       {
+        kind: "wordOrder",
         instruction: "並べ替え",
-        prompt: "example / can / for / find / students / information / quickly",
+        tokens: ["can", "information quickly", "For example", "find", "students"],
+        correctOrder: [2, 4, 0, 3, 1],
         answer: "For example, students can find information quickly.",
       },
       {
+        kind: "wordOrder",
         instruction: "並べ替え",
-        prompt: "say / people / some / smartphones / can / distract / students / but / clear rules / can / help",
+        tokens: ["but", "clear rules can help", "smartphones can distract students", "Some people say"],
+        correctOrder: [3, 2, 0, 1],
         answer: "Some people say smartphones can distract students, but clear rules can help.",
       },
     ],
+    writingHintJa:
+      "スマホの校内使用について、これまで学んだ表現を使って書く総合問題です。理由を2つ挙げ、そのうち1つには具体例を添え、反対意見にも軽く触れてまとめましょう。",
     prompt:
       "Do you think students should be allowed to use smartphones at school? Start with \"In my opinion,\" or \"Personally, I think\", give two reasons (use \"for example\" for one of them), and add one sentence about the other side using \"but\" or \"on the other hand\".",
     wordCount: { min: 60, max: 90 },
