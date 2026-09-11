@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import { Progress } from "@/types/progress"
 import { Lesson } from "@/types/lesson"
+import { lessons } from "@/data/lessons"
 import {
   formatPendingLessonMessage,
   getNextIncompleteDay,
@@ -62,6 +63,26 @@ describe("getNextLessonStatus", () => {
     const ninetyDayLessons = allDays.map(mkLesson)
     const status = getNextLessonStatus(mk(allDays), ninetyDayLessons)
     expect(status).toEqual({ kind: "complete" })
+  })
+})
+
+describe("getNextLessonStatus with the real lesson data (Day1-30)", () => {
+  it("progresses from Day14 to Day15 once Day1-14 are completed", () => {
+    const days1to14 = Array.from({ length: 14 }, (_, i) => i + 1)
+    const status = getNextLessonStatus(mk(days1to14), lessons)
+    expect(status.kind).toBe("lesson")
+    if (status.kind === "lesson") expect(status.lesson.day).toBe(15)
+  })
+
+  it("shows the Day30-aware pending message once Day1-30 are all completed", () => {
+    const days1to30 = Array.from({ length: 30 }, (_, i) => i + 1)
+    const status = getNextLessonStatus(mk(days1to30), lessons)
+    expect(status).toEqual({ kind: "pending", lastAvailableDay: 30 })
+    if (status.kind === "pending") {
+      expect(formatPendingLessonMessage(status.lastAvailableDay)).toBe(
+        "Day30まで完了しました。次のレッスンを準備中です。"
+      )
+    }
   })
 })
 
