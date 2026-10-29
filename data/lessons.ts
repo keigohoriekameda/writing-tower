@@ -12,7 +12,7 @@ export const lessons: Lesson[] = [
     wordCount: { min: 50, max: 80 },
     timeLimit: 10,
     answerExample:
-      "I agree that students should be allowed to use smartphones at school. First, smartphones can help students find information quickly during class. Second, smartphones make it easy to contact parents in an emergency. So, smartphones are useful tools for students, and schools should allow them with clear rules.",
+      "I agree that students should be allowed to use smartphones at school. First, smartphones can help students find information quickly during class. Second, smartphones make it easy to contact parents in an emergency. This makes students and their families feel safe. So, smartphones are useful tools for students, and schools should allow them with clear rules.",
   },
   {
     id: "day-2",
@@ -77,7 +77,7 @@ export const lessons: Lesson[] = [
     wordCount: { min: 50, max: 80 },
     timeLimit: 10,
     answerExample:
-      "Hi Alex,\n\nThanks for your email. My favorite subject is English. I like it because I can talk with people from different countries. My teacher also makes the lessons fun with games and songs. I want to keep studying English so I can travel abroad someday.\n\nBest,\n[Your name]",
+      "Hi Alex,\n\nThanks for your email. My favorite subject is English. I like it because I can talk with people from different countries. My teacher also makes the lessons fun with games and songs. I also enjoy reading short English stories. I want to keep studying English so I can travel abroad someday.\n\nBest,\n[Your name]",
   },
   {
     id: "day-7",
@@ -125,7 +125,7 @@ export const lessons: Lesson[] = [
       },
     ],
     keyExpressions: [
-      { phrase: "should + 動詞の原形", meaningJa: "~すべきだ(義務・提案)" },
+      { phrase: "should + 動詞の原形", meaningJa: "~すべきだ・~したほうがよい(提案・助言)" },
       { phrase: "But some people say ~.", meaningJa: "しかし、~と言う人もいる(軽い譲歩)" },
     ],
     guidedPractice: [
@@ -219,11 +219,11 @@ export const lessons: Lesson[] = [
     writingHintJa:
       "Alexからの旅行の誘いに返信するメールです。お礼を伝え、誘いに乗ることを伝えたうえで、自分からも新しい提案を1つ加えてみましょう。",
     prompt:
-      "You received an email from your foreign friend, Alex.\n\nHi,\nI have an idea! Why don't we go to Kyoto together during the holidays? We can visit temples and try Japanese sweets. What do you think?\n\nAlex\n\nWrite an email to Alex. Thank him, say yes to the trip, and suggest one more thing you would like to do.",
+      "You received an email from your foreign friend, Alex.\n\nHi,\nI have an idea! Why don't we go to Kyoto together during the holidays? We can visit temples and try Japanese sweets. What do you think?\n\nAlex\n\nWrite an email to Alex. Thank Alex, say yes to the trip, and suggest one more thing you would like to do.",
     wordCount: { min: 50, max: 80 },
     timeLimit: 10,
     answerExample:
-      "Hi Alex,\n\nThank you for your email. That sounds like a great idea! I would love to go to Kyoto with you. Why don't we also visit a famous shrine there? I'm planning to bring my camera to take pictures of the temples.\n\nBest,\n[Your name]",
+      "Hi Alex,\n\nThank you for your email. That sounds like a great idea! I would love to go to Kyoto with you. Why don't we also visit a famous shrine there? I'm planning to bring my camera to take pictures of the temples. I'm also excited to try Japanese sweets with you.\n\nBest,\n[Your name]",
   },
   {
     id: "day-10",
@@ -286,7 +286,7 @@ export const lessons: Lesson[] = [
     wordCount: { min: 50, max: 80 },
     timeLimit: 10,
     answerExample:
-      "I prefer studying with friends to studying alone. First, we can ask each other questions when we don't understand something. On the other hand, studying alone can be quieter and easier to concentrate. So, I think studying with friends is more helpful for me because I can learn from them.",
+      "I prefer studying with friends to studying alone. First, we can ask each other questions when we don't understand something. On the other hand, studying alone can be quieter, so it is easier to concentrate. So, I think studying with friends is more helpful for me because I can learn from them.",
   },
   {
     id: "day-11",
@@ -340,11 +340,11 @@ export const lessons: Lesson[] = [
     writingHintJa:
       "テスト前で不安になっている友達を励ますメールです。まず励ましの言葉をかけ、そのあとで勉強法のアドバイスを1つ伝えましょう。",
     prompt:
-      "You received an email from your foreign friend, Alex.\n\nHi,\nI have a big test next week, and I'm really worried. I don't know how to study for it. Do you have any advice for me?\n\nAlex\n\nWrite an email to Alex. Encourage him and give him one piece of advice.",
+      "You received an email from your foreign friend, Alex.\n\nHi,\nI have a big test next week, and I'm really worried. I don't know how to study for it. Do you have any advice for me?\n\nAlex\n\nWrite an email to Alex. Encourage Alex and give one piece of advice.",
     wordCount: { min: 50, max: 80 },
     timeLimit: 10,
     answerExample:
-      "Hi Alex,\n\nDon't worry. Everyone feels nervous before a big test. I think you should make a study schedule and study a little every day. If you study every day, you will remember more and feel less worried. You can do it!\n\nBest,\n[Your name]",
+      "Hi Alex,\n\nDon't worry. Everyone feels nervous before a big test. I think you should make a study schedule and study a little every day. If you study every day, you will remember more and feel less worried. Also, please get enough sleep the night before the test. You can do it!\n\nBest,\n[Your name]",
   },
   {
     id: "day-12",
@@ -374,7 +374,7 @@ export const lessons: Lesson[] = [
     ],
     keyExpressions: [
       { phrase: "for example", meaningJa: "例えば" },
-      { phrase: "A is more useful than B", meaningJa: "AはBより役立つ", reusedFromDay: 10 },
+      { phrase: "A is more useful than B", meaningJa: "AはBより役立つ" },
     ],
     guidedPractice: [
       {
@@ -406,7 +406,7 @@ export const lessons: Lesson[] = [
     wordCount: { min: 50, max: 80 },
     timeLimit: 10,
     answerExample:
-      "I think the Internet is more useful than books for studying. For example, I can find the newest information in just a few seconds. On the other hand, books can be useful because the information is often carefully checked. So, I usually use both books and the Internet together.",
+      "I think the Internet is more useful than books for studying. For example, I can find the newest information in just a few seconds. On the other hand, books can be useful because the information is often carefully checked. So, I usually use both books and the Internet together. Both of them help me learn more.",
   },
   {
     id: "day-13",
@@ -486,7 +486,7 @@ export const lessons: Lesson[] = [
       { kind: "reveal", questionJa: "掲示物はあなたに何を含めるよう求めていますか？", answerJa: "理由と具体例" },
     ],
     keyExpressions: [
-      { phrase: "In my opinion, ~ / Personally, I think ~", meaningJa: "私は~だと思う(意見表明のバリエーション)", reusedFromDay: 1 },
+      { phrase: "In my opinion, ~ / Personally, I think ~", meaningJa: "私は~だと思う(意見表明のバリエーション)" },
       { phrase: "for example", meaningJa: "例えば", reusedFromDay: 12 },
       { phrase: "but / on the other hand", meaningJa: "しかし/一方で(軽い譲歩)", reusedFromDay: 8 },
     ],
@@ -554,7 +554,7 @@ export const lessons: Lesson[] = [
       },
     ],
     keyExpressions: [
-      { phrase: "A is faster/better than B", meaningJa: "AはBより速い/良い", reusedFromDay: 10 },
+      { phrase: "A is faster/better than B", meaningJa: "AはBより速い/良い", reusedFromDay: 12 },
       { phrase: "because ~", meaningJa: "なぜなら~", reusedFromDay: 1 },
     ],
     guidedPractice: [
@@ -587,7 +587,7 @@ export const lessons: Lesson[] = [
     wordCount: { min: 50, max: 80 },
     timeLimit: 10,
     answerExample:
-      "I think riding a bike is better than walking to school. First, biking is much faster, so I can sleep a little longer in the morning. Second, I don't get tired before class starts. Walking is good exercise, but for busy mornings, I prefer biking to walking.",
+      "I think riding a bike is better than walking to school. First, biking is much faster, so I can sleep a little longer in the morning. Second, I don't get tired before class starts. Biking is also fun because I can enjoy the fresh air. Walking is good exercise, but for busy mornings, I prefer biking to walking.",
   },
   {
     id: "day-16",
@@ -644,11 +644,11 @@ export const lessons: Lesson[] = [
     writingHintJa:
       "友達に勉強を手伝ってほしいとお願いするメールです。テストで困っていることを伝えたうえで、Could you ~?を使って手伝ってほしいことを頼んでみましょう。",
     prompt:
-      "You received an email from your friend, Alex. Write a reply. Tell Alex about your math test, and ask him to help you study using \"Could you ~?\".",
+      "You received an email from your friend, Alex. Write a reply. Tell Alex about your math test, and ask Alex to help you study using \"Could you ~?\".",
     wordCount: { min: 50, max: 80 },
     timeLimit: 10,
     answerExample:
-      "Hi Alex,\n\nThanks for your email. That sounds relaxing! Actually, I have a math test next week, and I don't understand some of the problems. Could you help me study this weekend? We could also watch a movie after that.\n\nBest,\n[Your name]",
+      "Hi Alex,\n\nThanks for your email. That sounds relaxing! Actually, I have a math test next week, and I don't understand some of the problems. Could you help me study this weekend? I'm free on Saturday afternoon, so we could start at two. We could also watch a movie after that.\n\nBest,\n[Your name]",
   },
   {
     id: "day-17",
@@ -715,7 +715,7 @@ export const lessons: Lesson[] = [
     wordCount: { min: 50, max: 80 },
     timeLimit: 10,
     answerExample:
-      "I think students should clean their own classroom. First, cleaning helps students learn to take care of their things. Second, working together to clean makes the class feel like a team. So, I believe cleaning the classroom is a good experience for students, even though it takes some time.",
+      "I think students should clean their own classroom. First, cleaning helps students learn to take care of their things. Second, working together to clean makes the class feel like a team. A clean room also helps everyone study better. So, I believe cleaning the classroom is a good experience for students, even though it takes some time.",
   },
   {
     id: "day-18",
@@ -831,7 +831,7 @@ export const lessons: Lesson[] = [
         kind: "fillBlank",
         instruction: "空欄補充",
         prompt: "___ ___, the school festival lets students show their talents.",
-        choices: ["For example", "In addition", "But some"],
+        choices: ["For example", "On the other hand", "But some"],
         correctIndex: 0,
       },
     ],
@@ -842,7 +842,7 @@ export const lessons: Lesson[] = [
     wordCount: { min: 55, max: 85 },
     timeLimit: 10,
     answerExample:
-      "I think schools should have more school events. First, events like festivals help students make new friends outside their own class. In addition, events give students a chance to show their talents, like singing or sports. So, I believe more school events would make school life more fun for everyone.",
+      "I think schools should have more school events. First, events like festivals help students make new friends outside their own class. In addition, events give students a chance to show their talents, like singing or sports. So, I believe more school events would make school life more fun for everyone. Students would look forward to going to school every day.",
   },
   {
     id: "day-20",
@@ -880,7 +880,7 @@ export const lessons: Lesson[] = [
         kind: "fillBlank",
         instruction: "空欄補充",
         prompt: "That sounds great! ___ we meet at the library at 10?",
-        choices: ["Why don't", "Could", "Are"],
+        choices: ["Why don't", "Does", "Are"],
         correctIndex: 0,
       },
       {
@@ -898,7 +898,7 @@ export const lessons: Lesson[] = [
     wordCount: { min: 55, max: 85 },
     timeLimit: 10,
     answerExample:
-      "Hi Alex,\n\nThank you for your email. That sounds great! I have some questions about chapter 3, so your help would be really useful. Could you bring your notes on Saturday? Why don't we meet at the library at 10?\n\nBest,\n[Your name]",
+      "Hi Alex,\n\nThank you for your email. That sounds great! I have some questions about chapter 3, so your help would be really useful. Could you bring your notes on Saturday? Why don't we meet at the library at 10? I'm looking forward to seeing you on Saturday. I will bring some snacks for us.\n\nBest,\n[Your name]",
   },
   {
     id: "day-21",
@@ -942,7 +942,7 @@ export const lessons: Lesson[] = [
       {
         kind: "fillBlank",
         instruction: "空欄補充",
-        prompt: "___ ___ I can't go to the park, I hope you have a great time.",
+        prompt: "___ ___ I can't go to the amusement park. I hope you have a great time.",
         choices: ["I'm afraid", "Why don't", "So many"],
         correctIndex: 0,
       },
@@ -950,11 +950,11 @@ export const lessons: Lesson[] = [
     writingHintJa:
       "誘いを丁寧に断るメールです。まずお礼を言い、I'm afraid I can't~because~を使って行けない理由を伝えましょう。",
     prompt:
-      "Reply to Alex's email. Thank him for the invitation, but politely say you can't come this Sunday because of a family event.",
+      "Reply to Alex's email. Thank Alex for the invitation, but politely say you can't come this Sunday because of a family event.",
     wordCount: { min: 55, max: 85 },
     timeLimit: 10,
     answerExample:
-      "Hi Alex,\n\nThank you for your email. It sounds like a lot of fun! I'm afraid I can't come this Sunday because I have a family event that day. I hope you all have a great time. Let's do something together another day.\n\nBest,\n[Your name]",
+      "Hi Alex,\n\nThank you for your email. It sounds like a lot of fun! I'm afraid I can't come this Sunday because I have a family event that day. I hope you all have a great time. I would love to hear about it later. Please send me some pictures! Let's do something together another day.\n\nBest,\n[Your name]",
   },
   {
     id: "day-22",
@@ -996,14 +996,14 @@ export const lessons: Lesson[] = [
         kind: "fillBlank",
         instruction: "空欄補充",
         prompt: "Video games are fun. ___ ___, they can help students relax after school.",
-        choices: ["In addition", "For example", "But some"],
+        choices: ["In addition", "On the other hand", "But some"],
         correctIndex: 0,
       },
       {
         kind: "fillBlank",
         instruction: "空欄補充",
         prompt: "___ ___, some games help students solve problems and think quickly.",
-        choices: ["For example", "In addition", "So many"],
+        choices: ["For example", "On the other hand", "So many"],
         correctIndex: 0,
       },
     ],
@@ -1014,7 +1014,7 @@ export const lessons: Lesson[] = [
     wordCount: { min: 60, max: 90 },
     timeLimit: 11,
     answerExample:
-      "I think reading books is more helpful for students than playing video games. First, reading helps students learn new words and ideas. In addition, books can teach us about different people and places. For example, I learned a lot about space from a book last month. So, I believe reading is a great habit for students.",
+      "I think reading books is more helpful for students than playing video games. First, reading helps students learn new words and ideas. In addition, books can teach us about different people and places. For example, I learned a lot about space from a book last month. So, I believe reading is a great habit for students. Reading is also a nice way to relax.",
   },
   {
     id: "day-23",
@@ -1071,11 +1071,11 @@ export const lessons: Lesson[] = [
     writingHintJa:
       "以前の予定に行けなくなったことを伝え、Would you like to~?を使って別の日を提案するメールです。I'm afraid I can't~because~(Day21)も一緒に使ってみましょう。",
     prompt:
-      "Write an email to Alex. Tell him you can't go to the museum this Sunday, explain why, and use \"Would you like to ~?\" to suggest a new day.",
+      "Write an email to Alex. Tell Alex you can't go to the museum this Sunday, explain why, and use \"Would you like to ~?\" to suggest a new day.",
     wordCount: { min: 60, max: 90 },
     timeLimit: 11,
     answerExample:
-      "Hi Alex,\n\nI'm really sorry, but I'm afraid I can't go to the museum this Sunday because I have to help my family with something. Would you like to go next Sunday instead? I still really want to see the dinosaur exhibit with you.\n\nBest,\n[Your name]",
+      "Hi Alex,\n\nI'm really sorry about the sudden change, but I'm afraid I can't go to the museum this Sunday because I have to help my family with something. Would you like to go next Sunday instead? Please let me know which day is good for you. I still really want to see the dinosaur exhibit with you.\n\nBest,\n[Your name]",
   },
   {
     id: "day-24",
@@ -1135,7 +1135,7 @@ export const lessons: Lesson[] = [
     wordCount: { min: 60, max: 90 },
     timeLimit: 11,
     answerExample:
-      "I prefer watching movies at home to going to the theater. First, it's cheaper because I don't need to buy a ticket. Second, I can pause the movie whenever I want. On the other hand, watching at the theater feels more exciting because of the big screen and sound. Still, I usually choose to watch at home.",
+      "I prefer watching movies at home to going to the theater. First, it's cheaper because I don't need to buy a ticket. Second, I can pause the movie whenever I want. On the other hand, watching at the theater feels more exciting because of the big screen and sound. Still, I usually choose to watch at home because I can wear comfortable clothes and relax.",
   },
   {
     id: "day-25",
@@ -1191,7 +1191,7 @@ export const lessons: Lesson[] = [
     wordCount: { min: 65, max: 95 },
     timeLimit: 12,
     answerExample:
-      "According to the survey, 60 students want a new uniform design. In my opinion, the school should consider a change. First, a new design could make students feel more excited about wearing their uniform. Second, styles change over time, so an update seems natural. For these reasons, I think a new design would be a good idea.",
+      "According to the survey, 60 students want a new uniform design. In my opinion, the school should consider a change. First, a new design could make students feel more excited about wearing their uniform. Second, styles change over time, so an update seems natural. I also hope the school will listen to students' opinions. For these reasons, I think a new design would be a good idea.",
   },
   {
     id: "day-26",
@@ -1244,11 +1244,11 @@ export const lessons: Lesson[] = [
     writingHintJa:
       "サッカーを続けるか悩んでいるAlexにアドバイスするメールです。Day11で使ったI think you should~を使って、あなたの考えを伝えてみましょう。",
     prompt:
-      "Reply to Alex's email. Give him advice about whether to keep playing soccer, using \"I think you should ~\".",
+      "Reply to Alex's email. Give Alex advice about whether to keep playing soccer, using \"I think you should ~\".",
     wordCount: { min: 65, max: 95 },
     timeLimit: 12,
     answerExample:
-      "Hi Alex,\n\nThank you for telling me about this. I think you should keep playing soccer, because you said you really enjoy it. You could also try to manage your time better so you don't fall behind on homework. Whatever you decide, I'm sure you'll make the right choice.\n\nBest,\n[Your name]",
+      "Hi Alex,\n\nThank you for telling me about this. I think you should keep playing soccer, because you said you really enjoy it. You could also try to manage your time better so you don't fall behind on homework. Talking with your coach might also help. Please let me know what you decide. Whatever you decide, I'm sure you'll make the right choice.\n\nBest,\n[Your name]",
   },
   {
     id: "day-27",
@@ -1258,7 +1258,7 @@ export const lessons: Lesson[] = [
     topic: "Thank a friend for their help or a gift.",
     scene: {
       contextJa: "以前もらったアドバイスや助けに対して、Alexにお礼を伝えるメールを書く場面です。",
-      intro: "Kenta: Did you thank Alex for helping you with your problem last week?\nYou: Not yet! I should write to him today.",
+      intro: "Kenta: Did you thank Alex for helping you with your problem last week?\nYou: Not yet! I should write to Alex today.",
     },
     comprehension: [
       { kind: "reveal", questionJa: "あなたは今日何をする必要がありますか？", answerJa: "先週助けてくれたAlexにお礼を伝えること" },
@@ -1293,11 +1293,11 @@ export const lessons: Lesson[] = [
     writingHintJa:
       "以前助けてもらったことへのお礼を伝えるメールです。何に感謝しているかを具体的に書き、最後にWould you like to~?で何か誘ってみましょう。",
     prompt:
-      "Write an email to Alex to thank him for his advice or help last week. Explain what it helped you with, and invite him to do something using \"Would you like to ~?\".",
+      "Write an email to Alex to thank Alex for the advice or help last week. Explain what it helped you with, and invite Alex to do something using \"Would you like to ~?\".",
     wordCount: { min: 65, max: 95 },
     timeLimit: 12,
     answerExample:
-      "Hi Alex,\n\nThank you for your advice last week. It really helped me feel better about my problem, and things are much better now. I'm really glad I talked to you about it. Would you like to hang out this weekend? It would be nice to properly say thank you.\n\nBest,\n[Your name]",
+      "Hi Alex,\n\nThank you for your advice last week. It really helped me feel better about my problem, and things are much better now. You are such a kind friend. I'm really glad I talked to you about it. I hope I can help you someday too. Would you like to hang out this weekend? It would be nice to properly say thank you.\n\nBest,\n[Your name]",
   },
   {
     id: "day-28",
@@ -1357,7 +1357,7 @@ export const lessons: Lesson[] = [
     wordCount: { min: 65, max: 95 },
     timeLimit: 12,
     answerExample:
-      "I think sports day is the most important school event. First, it helps students work together as a team through relay races and group activities. In addition, according to my classmates, sports day creates some of our best memories of the year. For these reasons, I believe sports day is the most valuable event for students.",
+      "I think sports day is the most important school event. First, it helps students work together as a team through relay races and group activities. In addition, according to my classmates, sports day creates some of our best memories of the year. For example, running the relay together taught me how important my teammates are. For these reasons, I believe sports day is the most valuable event for students.",
   },
   {
     id: "day-29",
@@ -1380,7 +1380,7 @@ export const lessons: Lesson[] = [
     ],
     keyExpressions: [
       { phrase: "In the end, ~", meaningJa: "結局のところ、~(結論を導く)" },
-      { phrase: "In my opinion / I think", meaningJa: "私は~だと思う", reusedFromDay: 1 },
+      { phrase: "In my opinion / I think", meaningJa: "私は~だと思う", reusedFromDay: 14 },
     ],
     guidedPractice: [
       {
@@ -1394,7 +1394,7 @@ export const lessons: Lesson[] = [
         kind: "fillBlank",
         instruction: "空欄補充",
         prompt: "Talented people still need to practice. ___ ___ ___, effort is important for everyone.",
-        choices: ["In the end", "In addition", "According to"],
+        choices: ["In the end", "But some", "According to"],
         correctIndex: 0,
       },
       {
@@ -1412,7 +1412,7 @@ export const lessons: Lesson[] = [
     wordCount: { min: 65, max: 95 },
     timeLimit: 12,
     answerExample:
-      "I think effort is more important than talent. Even talented people need to practice to get better. For example, many famous athletes practice every single day, even after they become successful. In the end, effort is something everyone can control, but talent is not. That is why I believe effort matters more.",
+      "I think effort is more important than talent. Even talented people need to practice to get better. For example, many famous athletes practice every single day, even after they become successful. In the end, effort is something everyone can control, but talent is not. Hard work also gives us confidence when we face difficult things. Everyone can start today. That is why I believe effort matters more.",
   },
   {
     id: "day-30",
@@ -1436,7 +1436,7 @@ export const lessons: Lesson[] = [
       { kind: "reveal", questionJa: "先生が生徒に考えてほしいと言っていることは何ですか？", answerJa: "中学生にとって一番大切な力は何か" },
     ],
     keyExpressions: [
-      { phrase: "In my opinion / I think", meaningJa: "私は~だと思う", reusedFromDay: 1 },
+      { phrase: "In my opinion / I think", meaningJa: "私は~だと思う", reusedFromDay: 14 },
       { phrase: "because / for example", meaningJa: "理由・具体例を述べる表現", reusedFromDay: 1 },
       { phrase: "In the end, ~", meaningJa: "結局のところ", reusedFromDay: 29 },
     ],
@@ -1470,7 +1470,7 @@ export const lessons: Lesson[] = [
     wordCount: { min: 70, max: 100 },
     timeLimit: 13,
     answerExample:
-      "In my opinion, communication is the most important skill for junior high school students. First, good communication helps students share their ideas clearly with teachers and friends. For example, working well in group projects becomes much easier when students can explain their thoughts. In the end, no matter what job or path we choose in the future, being able to communicate well will always be useful.",
+      "In my opinion, communication is the most important skill for junior high school students. First, good communication helps students share their ideas clearly with teachers and friends. Good communication also helps us make friends. For example, working well in group projects becomes much easier when students can explain their thoughts. In the end, no matter what job or path we choose in the future, being able to communicate well will always be useful.",
   },
 ]
 

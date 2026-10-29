@@ -8,37 +8,46 @@ import Building from "@/components/Building"
 import PhraseOfDay from "@/components/PhraseOfDay"
 import BuildingCheck from "@/components/BuildingCheck"
 import ReadAloudButton from "@/components/ReadAloudButton"
+import SyncErrorBanner from "@/components/SyncErrorBanner"
 
 type Props = {
   feedback: FeedbackResult
   essay: string
   day: number
   answerExample?: string
+  /** The "First / Second / So" Building Check only fits opinion essays. */
+  lessonType: "opinion" | "email"
 }
 
-export default function FeedbackView({ feedback, essay, day, answerExample }: Props) {
-  const { completeDay, progress, saveError } = useProgress()
+export default function FeedbackView({ feedback, essay, day, answerExample, lessonType }: Props) {
+  const { completeDay, progress, saveError, resync } = useProgress()
+  const isDemo = feedback.isMock === true
 
+  // A Day counts only for a genuine review. Demo (mock) feedback never
+  // completes a Day; completeDay itself is idempotent per day.
   useEffect(() => {
-    completeDay(day)
-  }, [day, completeDay])
+    if (!isDemo) void completeDay(day)
+  }, [day, isDemo, completeDay])
 
   return (
     <div className="flex flex-col gap-5">
-      {feedback.isMock && process.env.NODE_ENV === "development" && (
-        <div className="rounded-xl bg-amber-50 px-4 py-2 text-xs text-amber-600">
-          デモモード — .env.local に OPENAI_API_KEY を追加するとAIフィードバックが使えます。
+      {isDemo && (
+        <div role="status" className="rounded-xl bg-amber-50 px-4 py-2 text-xs text-amber-700">
+          デモ表示です（開発用）。これはあなたの英文への添削ではなく、Dayも完了になりません。
         </div>
       )}
 
-      {saveError && (
-        <div className="rounded-xl bg-red-50 px-4 py-2 text-xs text-red-600">{saveError}</div>
-      )}
+      {saveError && <SyncErrorBanner message={saveError} onResync={resync} />}
 
       {/* ① Praise */}
       <div className="rounded-2xl bg-indigo-50 p-5">
-        <p className="text-sm font-bold text-indigo-500">🎉 よくできました！</p>
+        <p className="text-sm font-bold text-indigo-500">{isDemo ? "デモ" : "🎉 よくできました！"}</p>
         <p className="mt-2 text-sm leading-relaxed text-indigo-900">{feedback.praise}</p>
+        {feedback.evidence && (
+          <p className="mt-3 border-l-2 border-indigo-200 pl-3 text-xs text-indigo-500">
+            あなたの英文より: “{feedback.evidence}”
+          </p>
+        )}
       </div>
 
       {/* ② Good Points */}
@@ -64,7 +73,7 @@ export default function FeedbackView({ feedback, essay, day, answerExample }: Pr
       <PhraseOfDay />
 
       {/* ⑤ Building Check */}
-      <BuildingCheck essay={essay} />
+      {lessonType === "opinion" && <BuildingCheck essay={essay} />}
 
       {/* ⑥ Answer Example */}
       {answerExample && (
@@ -82,6 +91,7 @@ export default function FeedbackView({ feedback, essay, day, answerExample }: Pr
       )}
 
       {/* ⑦ Building Completion */}
+      {!isDemo && (
       <div className="rounded-2xl bg-green-50 p-6 text-center">
         <div className="mb-3 flex justify-center">
           <Building
@@ -93,6 +103,7 @@ export default function FeedbackView({ feedback, essay, day, answerExample }: Pr
         <p className="text-sm font-bold text-green-700">Day {day} 完成！🎉</p>
         <p className="mt-1 text-xs text-green-500">タワーが育っています。明日も続けよう！</p>
       </div>
+      )}
 
       <Link
         href="/"

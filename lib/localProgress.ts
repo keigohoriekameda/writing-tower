@@ -14,10 +14,25 @@ export function loadLocalProgress(loginId: string): Progress {
   if (typeof window === "undefined") return { completedDays: [] }
   try {
     const raw = localStorage.getItem(progressKey(loginId))
-    return raw ? (JSON.parse(raw) as Progress) : { completedDays: [] }
+    return raw ? sanitizeProgress(JSON.parse(raw)) : { completedDays: [] }
   } catch {
     return { completedDays: [] }
   }
+}
+
+/** Keeps only well-formed entries so a corrupted cache can't crash the app or be pushed to the cloud. */
+export function sanitizeProgress(value: unknown): Progress {
+  const list = (value as { completedDays?: unknown } | null)?.completedDays
+  if (!Array.isArray(list)) return { completedDays: [] }
+  const byDay = new Map<number, { day: number; completedAt: string }>()
+  for (const entry of list) {
+    const day = (entry as { day?: unknown } | null)?.day
+    const completedAt = (entry as { completedAt?: unknown } | null)?.completedAt
+    if (typeof day !== "number" || !Number.isInteger(day) || day < 1) continue
+    if (typeof completedAt !== "string" || Number.isNaN(Date.parse(completedAt))) continue
+    if (!byDay.has(day)) byDay.set(day, { day, completedAt })
+  }
+  return { completedDays: Array.from(byDay.values()).sort((a, b) => a.day - b.day) }
 }
 
 export function saveLocalProgress(loginId: string, progress: Progress): void {

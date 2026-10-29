@@ -1,110 +1,64 @@
 "use client"
 
-import { useState, useEffect, useCallback, useRef } from "react"
-import { Progress } from "@/types/progress"
+import { useCallback, useEffect, useMemo, useSyncExternalStore } from "react"
 import { createSupabaseBrowserClient } from "@/lib/supabase/client"
-import { resolveAuthenticatedStudent, AuthenticatedStudent } from "@/lib/auth/session"
-import { loadLocalProgress, saveLocalProgress, unionProgress, addCompletedDay } from "@/lib/localProgress"
+import { loadLocalProgress, saveLocalProgress } from "@/lib/localProgress"
 import { getCloudProgress, completeDayCloud } from "@/lib/progress/cloud"
+import { ProgressSync, SyncSnapshot } from "@/lib/progress/sync"
+import { useStudent } from "@/components/StudentGate"
 
 const LOAD_ERROR_MESSAGE =
   "進捗をサーバーから読み込めませんでした。表示中の進捗は端末に保存されたものです。"
 const SAVE_ERROR_MESSAGE =
-  "進捗を保存できませんでした。ネットワーク状態をご確認のうえ、後ほど再度お試しください。"
+  "進捗をサーバーに保存できませんでした。この端末には保存されています。通信状態を確認して「再同期」を押してください。"
 
+const SERVER_SNAPSHOT: SyncSnapshot = { progress: { completedDays: [] }, status: "ok" }
+
+/**
+ * Progress for the signed-in student (must be rendered inside StudentGate).
+ * A fresh ProgressSync is created per student, so switching accounts can
+ * never carry one student's days into another's view.
+ */
 export function useProgress() {
-  const [progress, setProgress] = useState<Progress>({ completedDays: [] })
-  const [saveError, setSaveError] = useState<string | null>(null)
-  const progressRef = useRef<Progress>({ completedDays: [] })
-  const studentPromiseRef = useRef<Promise<AuthenticatedStudent | null> | null>(null)
+  const { userId, studentId } = useStudent()
 
-  const applyProgress = useCallback((next: Progress) => {
-    progressRef.current = next
-    setProgress(next)
-  }, [])
+  const sync = useMemo(() => {
+    const supabase = createSupabaseBrowserClient()
+    return new ProgressSync(
+      {
+        getProgress: () => getCloudProgress(supabase, userId),
+        completeDay: (day) => completeDayCloud(supabase, day),
+      },
+      {
+        load: () => loadLocalProgress(studentId),
+        save: (p) => saveLocalProgress(studentId, p),
+      }
+    )
+  }, [userId, studentId])
+
+  const snapshot = useSyncExternalStore(sync.subscribe, sync.getSnapshot, () => SERVER_SNAPSHOT)
 
   useEffect(() => {
-    let cancelled = false
-    const supabase = createSupabaseBrowserClient()
-    const studentPromise = resolveAuthenticatedStudent(supabase)
-    studentPromiseRef.current = studentPromise
+    void sync.load()
+    const onOnline = () => void sync.resync()
+    window.addEventListener("online", onOnline)
+    return () => window.removeEventListener("online", onOnline)
+  }, [sync])
 
-    async function init() {
-      const student = await studentPromise
-      if (!student || cancelled) return
-
-      const local = loadLocalProgress(student.loginId)
-
-      let cloud: Progress
-      try {
-        cloud = await getCloudProgress(supabase, student.userId)
-      } catch (err) {
-        console.error("[writing-tower] failed to load cloud progress", err)
-        if (!cancelled) {
-          setSaveError(LOAD_ERROR_MESSAGE)
-          // Cloud is unreachable — fall back to the local cache rather than
-          // resetting to an empty (Day 1) state.
-          applyProgress(local)
-        }
-        return
-      }
-
-      // Cloud is authoritative, but rescue any days the local cache has
-      // that the cloud doesn't (private-browsing/pre-migration data) by
-      // merging up rather than ever overwriting cloud with local.
-      const merged = unionProgress(cloud, local)
-      if (!cancelled) applyProgress(merged)
-      saveLocalProgress(student.loginId, merged)
-
-      const missingFromCloud = merged.completedDays.filter(
-        (day) => !cloud.completedDays.some((c) => c.day === day.day)
-      )
-      for (const missing of missingFromCloud) {
-        try {
-          await completeDayCloud(supabase, missing.day)
-        } catch (err) {
-          console.error(`[writing-tower] failed to sync Day ${missing.day} to Supabase`, err)
-          if (!cancelled) setSaveError(SAVE_ERROR_MESSAGE)
-        }
-      }
-    }
-
-    init()
-    return () => {
-      cancelled = true
-    }
-  }, [applyProgress])
-
-  const completeDay = useCallback(
-    (day: number) => {
-      const next = addCompletedDay(progressRef.current, day)
-      const changed = next !== progressRef.current
-      if (changed) applyProgress(next)
-
-      void (async () => {
-        // Wait for the same session resolution useProgress's own init
-        // kicked off, so a completion fired right on mount (see
-        // FeedbackView) never races ahead of knowing who the user is.
-        const student = await studentPromiseRef.current
-        if (!student) return
-        if (changed) saveLocalProgress(student.loginId, next)
-
-        const supabase = createSupabaseBrowserClient()
-        try {
-          await completeDayCloud(supabase, day)
-        } catch (err) {
-          console.error(`[writing-tower] failed to save Day ${day} to Supabase`, err)
-          setSaveError(SAVE_ERROR_MESSAGE)
-        }
-      })()
-    },
-    [applyProgress]
-  )
+  const completeDay = useCallback((day: number) => sync.complete(day), [sync])
+  const resync = useCallback(() => sync.resync(), [sync])
 
   const isDayCompleted = useCallback(
-    (day: number) => progress.completedDays.some((d) => d.day === day),
-    [progress]
+    (day: number) => snapshot.progress.completedDays.some((d) => d.day === day),
+    [snapshot]
   )
 
-  return { progress, completeDay, isDayCompleted, saveError }
+  const saveError =
+    snapshot.status === "loadFailed"
+      ? LOAD_ERROR_MESSAGE
+      : snapshot.status === "saveFailed"
+        ? SAVE_ERROR_MESSAGE
+        : null
+
+  return { progress: snapshot.progress, completeDay, isDayCompleted, saveError, resync }
 }
