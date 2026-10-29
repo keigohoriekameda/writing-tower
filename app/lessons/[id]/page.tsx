@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { getLessonById } from "@/data/lessons"
+import StudentGate from "@/components/StudentGate"
 import LessonFlowClient from "@/components/LessonFlowClient"
 
 type Props = {
@@ -22,7 +23,9 @@ export default async function LessonPage({ params }: Props) {
         ← Back
       </Link>
 
-      <LessonFlowClient lesson={lesson} />
+      <StudentGate>
+        <LessonFlowClient lesson={lesson} />
+      </StudentGate>
     </main>
   )
 }

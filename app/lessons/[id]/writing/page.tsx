@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { getLessonById } from "@/data/lessons"
+import StudentGate from "@/components/StudentGate"
 import WritingEditor from "@/components/WritingEditor"
 
 type Props = {
@@ -32,7 +33,9 @@ export default async function WritingPage({ params }: Props) {
         <h1 className="mt-1 text-xl font-bold tracking-tight text-gray-900">{lesson.title}</h1>
       </div>
 
-      <WritingEditor lesson={lesson} />
+      <StudentGate>
+        <WritingEditor lesson={lesson} />
+      </StudentGate>
     </main>
   )
 }

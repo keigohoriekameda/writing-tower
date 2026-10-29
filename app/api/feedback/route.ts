@@ -1,48 +1,36 @@
-import { NextRequest, NextResponse } from "next/server"
-import { z } from "zod"
+import { handleFeedbackRequest, FeedbackDeps } from "@/lib/feedback/handler"
+import { MemoryQuota } from "@/lib/feedback/quota"
+import { resolveStudentAccess } from "@/lib/auth/session"
+import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { getOpenAI } from "@/lib/openai"
-import { buildPrompt, getMockFeedback } from "@/lib/feedback"
-import { getLessonById } from "@/data/lessons"
 
-const FeedbackSchema = z.object({
-  praise: z.string(),
-  goodPoints: z.array(z.string()).length(2),
-  oneImprovement: z.string(),
-  example: z.string(),
-})
+export const maxDuration = 30
 
-export async function POST(req: NextRequest) {
-  const { lessonId, essay } = await req.json()
+const memoryQuota = new MemoryQuota()
 
-  const lesson = getLessonById(lessonId)
-  if (!lesson) {
-    return NextResponse.json({ error: "Lesson not found" }, { status: 404 })
-  }
-
-  if (!process.env.OPENAI_API_KEY) {
-    return NextResponse.json(getMockFeedback(lesson))
-  }
-
-  try {
+const deps: FeedbackDeps = {
+  async authenticate(accessToken) {
+    const db = createSupabaseServerClient(accessToken)
+    const result = await resolveStudentAccess(db, accessToken)
+    if (result.status === "ok") return { ok: true, userId: result.student.userId, db }
+    return { ok: false, status: result.status }
+  },
+  async generate(messages) {
     const response = await getOpenAI().chat.completions.create({
       model: "gpt-4o-mini",
-      messages: [{ role: "user", content: buildPrompt(lesson, essay) }],
+      messages,
       response_format: { type: "json_object" },
-      temperature: 0.7,
+      temperature: 0.4,
+      max_tokens: 700,
     })
+    return response.choices[0]?.message.content ?? null
+  },
+  isAiConfigured: () => Boolean(process.env.OPENAI_API_KEY),
+  allowMock: () =>
+    process.env.NODE_ENV !== "production" && process.env.WRITING_TOWER_ALLOW_MOCK_FEEDBACK === "true",
+  memoryQuota,
+}
 
-    const content = response.choices[0].message.content
-    if (!content) throw new Error("Empty response from OpenAI")
-
-    const parsed = FeedbackSchema.safeParse(JSON.parse(content))
-    if (!parsed.success) {
-      console.error("Feedback validation failed:", parsed.error.issues)
-      return NextResponse.json(getMockFeedback(lesson))
-    }
-
-    return NextResponse.json(parsed.data)
-  } catch (err) {
-    console.error("Feedback API error:", err)
-    return NextResponse.json(getMockFeedback(lesson))
-  }
+export async function POST(req: Request) {
+  return handleFeedbackRequest(req, deps)
 }
