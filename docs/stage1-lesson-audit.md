@@ -25,5 +25,18 @@ All 23 word-order items, 46 fill-blank items, and all comprehension answers matc
 6. Day 18's scene is about Kai, but the task asks the student to write about themself.
 7. All email lessons are with "Alex"; the email format never varies (no reply to a different sender/topic type).
 
-## Eiken Grade Pre-2 format — NOT verified against official material
-The official site (eiken.or.jp) could not be reached from this environment (host not on the session network allow-list), so no official figures were confirmed. Secondary sources (publisher pages) confirm only that from the 2024 renewal Pre-2 writing has two tasks (an email-reply task added to the opinion essay). My recollection — unverified — is email ≈ 15–25 words and opinion ≈ 50–60 words, which would mean the app's email tasks (50–100 words) differ substantially from the real exam. Please check the current official "問題形式・採点基準" page before any curriculum revision.
+## Eiken Grade Pre-2 format (verified against the official 2026年度 第2回 一次試験 問題冊子, provided by the school owner)
+Writing has two tasks, both required:
+
+| | 大問5 Eメール | 大問6 英作文(意見論述) |
+|---|---|---|
+| Task | Reply to Alex's email; **ask 2 specific questions about the underlined part** of Alex's email | Opinion on a QUESTION with **2 reasons** |
+| Word target | **40–50 words** (the reply body) | **50–60 words** |
+| Format notes | Greeting/sign-off are pre-printed ("Best wishes," is printed; **no name needed**); off-topic answers can score 0 | Off-topic answers can score 0 |
+
+Differences from the current app (not changed in this PR; a separate curriculum PR is proposed):
+1. Email word range is 50–100 in the app vs **40–50** officially (Day 2–6 are 50–80, later days up to 95).
+2. Opinion range is 50–80 up to 70–100 in the app vs **50–60** officially.
+3. Email tasks in the app ask the student to answer Alex's questions / give advice / decline etc. The real task is different: **ask two questions about an underlined phrase** in Alex's email. No lesson practises this.
+4. App emails end with "Best, [Your name]"; the exam prints "Best wishes," and needs no name. The AI prompt currently checks "sign-off with the student's name".
+5. App word counts include greeting and sign-off; the exam counts only the body written in the answer box.
