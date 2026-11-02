@@ -134,3 +134,27 @@ describe("sanitizeProgress", () => {
     expect(sanitizeProgress(null).completedDays).toEqual([])
   })
 })
+
+describe("ProgressSync status stability", () => {
+  it("does not hide a save failure while a retry is still in flight (no banner flicker)", async () => {
+    const cloud = fakeCloud([1])
+    const sync = new ProgressSync(cloud, memStore())
+    const seen: string[] = []
+    sync.subscribe(() => seen.push(sync.getSnapshot().status))
+    // First push fails immediately; a second push (e.g. the load-time flush) is still pending when it settles.
+    let releaseSecond!: () => void
+    const second = new Promise<void>((r) => (releaseSecond = r))
+    cloud.completeDay.mockImplementationOnce(async () => { throw new Error("offline") })
+    cloud.completeDay.mockImplementationOnce(async () => { await second; throw new Error("offline") })
+    const first = sync.complete(5)
+    await first
+    const retry = sync.resync() // starts a second push for day 5 and hangs
+    await new Promise((r) => setTimeout(r, 0))
+    releaseSecond()
+    await retry
+    const firstFailure = seen.indexOf("saveFailed")
+    expect(firstFailure).toBeGreaterThanOrEqual(0)
+    expect(seen.slice(firstFailure).every((s) => s === "saveFailed")).toBe(true)
+    expect(sync.getSnapshot().status).toBe("saveFailed")
+  })
+})

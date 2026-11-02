@@ -82,7 +82,10 @@ export class ProgressSync {
     // this.progress already contains the local cache plus any completion
     // made while we were waiting; the cloud only ever adds to it.
     this.setProgress(unionProgress(cloud, this.progress))
-    this.status = "ok"
+    // A successful load clears "loadFailed", but must not hide an earlier
+    // "saveFailed" (days still waiting for the cloud) — the flush below
+    // settles that.
+    if (this.status === "loadFailed") this.status = "ok"
     this.publish()
     await this.flush()
   }
@@ -134,7 +137,10 @@ export class ProgressSync {
   private refreshStatus(): void {
     if (this.status === "loadFailed") return
     const unsynced = this.progress.completedDays.some((d) => !this.confirmed.has(d.day))
-    const next: SyncStatus = unsynced && this.inflight.size === 0 ? "saveFailed" : "ok"
+    // While a retry is still in flight the outcome is unknown: keep showing
+    // the current status instead of flickering the error banner away.
+    if (unsynced && this.inflight.size > 0) return
+    const next: SyncStatus = unsynced ? "saveFailed" : "ok"
     if (next !== this.status) {
       this.status = next
       this.publish()
