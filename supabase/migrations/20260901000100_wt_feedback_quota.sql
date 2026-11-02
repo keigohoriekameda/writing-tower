@@ -25,8 +25,17 @@ create table if not exists wt_feedback_usage (
 create index if not exists wt_feedback_usage_user_created_idx
   on wt_feedback_usage (user_id, created_at desc);
 
--- No policies and no grants: rows are only written by the RPC below.
+-- No policies: rows are only written by the RPC below.
 alter table wt_feedback_usage enable row level security;
+
+-- Supabase's default privileges give anon/authenticated/service_role ALL
+-- privileges on every new table in public (and USAGE/UPDATE on its
+-- sequence). RLS would block SELECT/INSERT/UPDATE/DELETE here, but NOT
+-- TRUNCATE, which would let any caller reset every student's usage counter.
+-- Remove all API-role access; the SECURITY DEFINER function below runs as
+-- the table owner and needs none of it. service_role is left alone.
+revoke all on table wt_feedback_usage from anon, authenticated;
+revoke all on sequence wt_feedback_usage_id_seq from anon, authenticated;
 
 create or replace function wt_consume_feedback_quota()
 returns table (allowed boolean, reason text, retry_after_seconds integer)
