@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest"
+import { countWords } from "@/lib/essay"
 import { lessons, getLessonById } from "@/data/lessons"
 
 function findDay(day: number) {
@@ -142,5 +143,72 @@ describe("Day26: integrates 'consult -> advise' using Day16/18's and Day11's phr
     expect(reusedDays).toContain(16)
     expect(reusedDays).toContain(11)
     expect(day26.answerExample).toMatch(/I think you should/)
+  })
+})
+
+describe("lesson integrity audit (all 30 days)", () => {
+  const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9' ]+/g, " ").replace(/\s+/g, " ").trim()
+
+  it("every model answer fits its own word range (otherwise the student's own submit button would reject it)", () => {
+    for (const l of lessons) {
+      const n = countWords(l.answerExample ?? "")
+      expect(n, `Day${l.day} answerExample has ${n} words`).toBeGreaterThanOrEqual(l.wordCount.min)
+      expect(n, `Day${l.day} answerExample has ${n} words`).toBeLessThanOrEqual(l.wordCount.max)
+    }
+  })
+
+  it("lessons are well-formed: unique ids, sane ranges, answer present", () => {
+    expect(new Set(lessons.map((l) => l.id)).size).toBe(lessons.length)
+    for (const l of lessons) {
+      expect(l.id).toBe(`day-${l.day}`)
+      expect(l.wordCount.min).toBeLessThan(l.wordCount.max)
+      expect(l.answerExample, `Day${l.day} answer`).toBeTruthy()
+    }
+  })
+
+  it("word-order items: correctOrder is a permutation of the tokens and rebuilds the stated answer", () => {
+    for (const l of lessons) {
+      for (const item of l.guidedPractice ?? []) {
+        if (item.kind !== "wordOrder") continue
+        const where = `Day${l.day} "${item.answer}"`
+        expect([...item.correctOrder].sort((a, b) => a - b), where).toEqual(item.tokens.map((_, i) => i))
+        expect(norm(item.correctOrder.map((i) => item.tokens[i]).join(" ")), where).toBe(norm(item.answer))
+      }
+    }
+  })
+
+  it("choice items: valid correctIndex, no duplicate choices, at least 2 choices", () => {
+    for (const l of lessons) {
+      const items = [
+        ...(l.comprehension ?? []).flatMap((q) => (q.kind === "choice" ? [q] : [])),
+        ...(l.guidedPractice ?? []).flatMap((q) => (q.kind === "fillBlank" ? [q] : [])),
+      ]
+      for (const q of items) {
+        expect(q.choices.length, `Day${l.day}`).toBeGreaterThanOrEqual(2)
+        expect(q.correctIndex, `Day${l.day}`).toBeGreaterThanOrEqual(0)
+        expect(q.correctIndex, `Day${l.day}`).toBeLessThan(q.choices.length)
+        expect(new Set(q.choices).size, `Day${l.day}`).toBe(q.choices.length)
+      }
+    }
+  })
+
+  it("reusedFromDay only points to an earlier day", () => {
+    for (const l of lessons) {
+      for (const k of l.keyExpressions ?? []) {
+        if (k.reusedFromDay !== undefined) expect(k.reusedFromDay, `Day${l.day} ${k.phrase}`).toBeLessThan(l.day)
+      }
+    }
+  })
+
+  it("does not assume Alex's gender in task prompts", () => {
+    for (const l of lessons) {
+      if (l.type === "email") expect(l.prompt, `Day${l.day}`).not.toMatch(/\b(him|his|he|her|she)\b/i)
+    }
+  })
+
+  it("email lessons' model answers have a greeting and a sign-off; opinion answers do not", () => {
+    for (const l of lessons) {
+      if (l.type === "email") expect(l.answerExample, `Day${l.day}`).toMatch(/^Hi Alex,[\s\S]*\[Your name\]$/)
+    }
   })
 })

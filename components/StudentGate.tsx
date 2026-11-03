@@ -4,6 +4,7 @@ import { createContext, useContext, useState, useEffect, useCallback } from "rea
 import { createSupabaseBrowserClient } from "@/lib/supabase/client"
 import { normalizeLoginId, loginIdToInternalEmail } from "@/lib/auth/loginId"
 import { resolveAuthenticatedStudent, AuthenticatedStudent } from "@/lib/auth/session"
+import { clearProgressSyncs } from "@/lib/progress/registry"
 
 const GENERIC_LOGIN_ERROR =
   "IDまたはパスワードが正しくないか、Writing Towerの利用権限がありません。先生にご確認ください。"
@@ -97,6 +98,7 @@ export default function StudentGate({ children }: Props) {
   }
 
   const handleSwitch = useCallback(() => {
+    clearProgressSyncs()
     const supabase = createSupabaseBrowserClient()
     supabase.auth.signOut().catch((err) => {
       console.error("[writing-tower] sign-out failed", err)
