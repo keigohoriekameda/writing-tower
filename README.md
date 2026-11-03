@@ -11,8 +11,9 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 ### AI feedback endpoint (`/api/feedback`)
 
 - Requires `Authorization: Bearer <Supabase access token>`; the server verifies the token with Supabase Auth, then checks `profiles.is_active` and Writing Tower product access. Anonymous / unauthorised requests never reach OpenAI.
-- Limits: 8 KB request, 1,200 characters, lesson word range, 1 request / 5 s, 20 / hour, 60 / day per student. The authoritative counter is the `wt_consume_feedback_quota` RPC (proposal: `supabase/migrations/20260901000100_wt_feedback_quota.sql`, **not applied to any database**). Until it is applied the API logs a warning and uses a per-instance in-memory limiter.
+- Limits: 8 KB request, 1,200 characters, 8 to 2x-lesson-maximum words (shorter/longer-than-target answers are still reviewed and flagged; a Day completes only for an in-range answer), 1 request / 5 s, 20 / hour, 60 / day per student. The authoritative counter is the `wt_consume_feedback_quota` RPC (proposal: `supabase/migrations/20260901000100_wt_feedback_quota.sql`, **not applied to any database**). Until it is applied the API logs a warning and uses a per-instance in-memory limiter.
 - Failures (no key, upstream error, malformed/ungrounded output) return a Japanese error; they are never replaced with canned feedback. Demo feedback exists only for local development (`WRITING_TOWER_ALLOW_MOCK_FEEDBACK=true`).
+- Review format (v2: estimated score, server-counted words, quoted strengths, <=2 priority fixes, rewrite mission and re-review): see `docs/ai-feedback-v2.md`.
 - Local end-to-end checks: see `e2e/README.md`.
 
 First, run the development server:

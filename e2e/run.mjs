@@ -85,7 +85,11 @@ for (const [vpName, vp] of Object.entries(viewports)) {
   const before = (await mockState()).counters
   await spacing(page); await submitBtn(page).click()
   await page.getByText("Day 1 完成").waitFor({ timeout: 8000 })
-  check(tag("Day1: grounded AI feedback displayed"), await page.getByText(/あなたの英文より/).isVisible())
+  check(tag("Day1: estimated score shown out of 16 (opinion), with the learning-estimate disclaimer"),
+    (await page.getByTestId("score-card").innerText()).includes("/ 16点") && (await page.getByText(/英検の本当の得点や合否を示すものではありません/).isVisible()))
+  check(tag("Day1: server-counted word count and a quoted strength are shown"),
+    (await page.getByTestId("word-count").innerText()).includes("目安 50〜80語") && (await page.getByText("良かったところ").isVisible()))
+  check(tag("Day1: model answer is hidden until the student asks"), !(await page.getByText(answers[1].slice(0, 40)).count()))
   await page.screenshot({ path: `${SHOTS}/${vpName}-feedback.png`, fullPage: true })
   let st = await mockState()
   check(tag("Day1: exactly one OpenAI call"), st.counters.openai - before.openai === 1)
@@ -96,8 +100,61 @@ for (const [vpName, vp] of Object.entries(viewports)) {
   await spacing(page); await submitBtn(page).click()
   await page.getByText("Day 2 完成").waitFor({ timeout: 8000 })
   check(tag("Day2 email: feedback shown, Building Check hidden"), !(await page.getByText("Building Check").count()))
+  check(tag("Day2 email: estimated score out of 12"), (await page.getByTestId("score-card").innerText()).includes("/ 12点"))
   st = await mockState()
   check(tag("Day2: completed in cloud once"), st.progress[meId].includes(2))
+
+  // --- rewrite mission + re-review (Day 6, email) ---------------------------
+  {
+    await writeEssay(page, 6)
+    const cBefore = (await mockState()).counters
+    await spacing(page); await submitBtn(page).click()
+    await page.getByText("Day 6 完成").waitFor({ timeout: 8000 })
+    check(tag("review shows at most 2 priority items"), (await page.getByTestId("priority-item").count()) >= 1 && (await page.getByTestId("priority-item").count()) <= 2)
+    check(tag("suggested fix is hidden until the student asks"), !(await page.getByText("修正例", { exact: true }).count()))
+    await page.getByRole("button", { name: /修正例を見る/ }).first().click()
+    check(tag("…then shown on request"), await page.getByText("修正例", { exact: true }).first().isVisible())
+    await page.screenshot({ path: `${SHOTS}/${vpName}-review-v2.png`, fullPage: true })
+    await page.getByRole("button", { name: /自分で書き直す/ }).click()
+    check(tag("rewrite mission opens; re-review is disabled until the text changes"),
+      (await page.getByTestId("rewrite-mission").isVisible()) && (await page.getByRole("button", { name: "再添削する" }).isDisabled()))
+    await page.getByLabel("穴埋めの答え").fill("really")
+    await page.getByRole("button", { name: "答え合わせ" }).click()
+    check(tag("fill-in drill: correct answer confirmed with the completed sentence"), await page.getByText(/正解！完成した英文/).isVisible())
+    await page.getByLabel("穴埋めの答え").fill("never")
+    await page.getByRole("button", { name: "答え合わせ" }).click()
+    check(tag("fill-in drill: wrong answer is not accepted"), await page.getByText(/おしい/).isVisible())
+    await page.getByLabel("穴埋めの答え").fill("really")
+    await page.getByRole("button", { name: "答え合わせ" }).click()
+    await page.getByRole("button", { name: "自分の英文に反映する" }).click()
+    check(tag("the corrected sentence is applied to the student's own text"), (await page.locator("#rewrite-text").inputValue()).includes("really"))
+    await page.screenshot({ path: `${SHOTS}/${vpName}-rewrite.png`, fullPage: true })
+    await spacing(page); await page.getByRole("button", { name: "再添削する" }).click()
+    await page.getByTestId("revision-result").waitFor({ timeout: 8000 })
+    check(tag("re-review shows the improvement"), (await page.getByTestId("revision-result").innerText()).includes("直せました"))
+    const cAfter = (await mockState()).counters
+    check(tag("re-review made exactly one more AI call"), cAfter.openai - cBefore.openai === 2)
+    check(tag("Day 6 is not completed twice (one cloud request)"), cAfter.completeDay - cBefore.completeDay === 1, JSON.stringify([cBefore, cAfter]))
+    await page.screenshot({ path: `${SHOTS}/${vpName}-rereview.png`, fullPage: true })
+  }
+
+  // --- short answer: reviewed, word-count notice, no Day completion until in range (Day 9) -------
+  {
+    const full = answers[9]
+    const short = full.split(/\s+/).slice(0, 22).join(" ")
+    await page.goto(`${APP}/lessons/day-9/writing`)
+    await page.getByLabel("Your English writing").fill(short)
+    check(tag("short answer: out-of-range notice, but submit is enabled"), (await page.getByText(/範囲外です/).isVisible()) && !(await submitBtn(page).isDisabled()))
+    await spacing(page); await submitBtn(page).click()
+    await page.getByTestId("word-count").waitFor({ timeout: 8000 })
+    check(tag("short answer: 語数が足りません shown by the server count"), (await page.getByTestId("word-count").innerText()).includes("語数が足りません"))
+    check(tag("short answer: Day 9 NOT completed"), !(await page.getByText("Day 9 完成").count()) && !(await mockState()).progress[meId].includes(9))
+    await page.getByRole("button", { name: /自分で書き直す/ }).click()
+    await page.locator("#rewrite-text").fill(full)
+    await spacing(page); await page.getByRole("button", { name: "再添削する" }).click()
+    await page.getByText("Day 9 完成").waitFor({ timeout: 8000 })
+    check(tag("after rewriting into the range, Day 9 completes"), (await mockState()).progress[meId].includes(9))
+  }
 
   // --- Meaning First days (8, 15, 30) walk-through + Day 7 legacy ----------
   for (const day of [7, 8, 15, 30]) {
@@ -117,7 +174,7 @@ for (const [vpName, vp] of Object.entries(viewports)) {
   }
   await page.waitForTimeout(300)
   st = await mockState()
-  check(tag("cloud has days 1,2,7,8,15,30"), JSON.stringify(st.progress[meId].sort((a, b) => a - b)) === "[1,2,7,8,15,30]", JSON.stringify(st.progress))
+  check(tag("cloud has days 1,2,6,7,8,9,15,30"), JSON.stringify(st.progress[meId].sort((a, b) => a - b)) === "[1,2,6,7,8,9,15,30]", JSON.stringify(st.progress))
 
   // --- API error: text kept, Japanese message, no completion, retry works --
   await control({ openaiMode: "error500" })
@@ -185,7 +242,7 @@ for (const [vpName, vp] of Object.entries(viewports)) {
   await page2.goto(`${APP}/`)
   await page2.waitForTimeout(1200)
   const local2 = await page2.evaluate((k) => localStorage.getItem(k), `writing-tower-progress-${me}`)
-  check(tag("new device restores all days from cloud"), JSON.parse(local2).completedDays.length === 9, local2)
+  check(tag("new device restores all days from cloud"), JSON.parse(local2).completedDays.length === 11, local2)
   await ctx2.close()
 
   // --- account switch: no mixing --------------------------------------------

@@ -20,8 +20,8 @@ const deps: FeedbackDeps = {
       model: "gpt-4o-mini",
       messages,
       response_format: { type: "json_object" },
-      temperature: 0.4,
-      max_tokens: 700,
+      temperature: 0.2,
+      max_tokens: 1500,
     })
     return response.choices[0]?.message.content ?? null
   },

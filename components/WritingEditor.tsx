@@ -2,17 +2,21 @@
 
 import { useEffect, useRef, useState } from "react"
 import { Lesson } from "@/types/lesson"
-import { FeedbackResult } from "@/types/feedback"
+import { FeedbackResult, RevisionRequest } from "@/types/feedback"
 import FeedbackView from "@/components/FeedbackView"
+import RewriteMission from "@/components/RewriteMission"
 import WritingScaffold from "@/components/WritingScaffold"
 import EmailScaffold from "@/components/EmailScaffold"
 import { useStudent } from "@/components/StudentGate"
 import { createSupabaseBrowserClient } from "@/lib/supabase/client"
-import { countWords, MAX_ESSAY_CHARS } from "@/lib/essay"
+import { countWords, MAX_ESSAY_CHARS, MAX_REVIEW_WORD_FACTOR, MIN_REVIEW_WORDS } from "@/lib/essay"
 import { clearDraft, loadDraft, saveDraft } from "@/lib/draft"
 import { submitFeedback } from "@/lib/feedbackClient"
 
 type SubmitError = { message: string; needsLogin: boolean }
+
+/** write -> first review -> (rewrite -> re-review). */
+type Phase = "write" | "reviewed" | "rewrite" | "rereviewed"
 
 type Props = {
   lesson: Lesson
@@ -22,24 +26,30 @@ export default function WritingEditor({ lesson }: Props) {
   const { studentId } = useStudent()
   const [text, setText] = useState(() => loadDraft(studentId, lesson.id))
   const [submitting, setSubmitting] = useState(false)
-  const [feedback, setFeedback] = useState<FeedbackResult | null>(null)
+  const [phase, setPhase] = useState<Phase>("write")
+  const [first, setFirst] = useState<{ feedback: FeedbackResult; text: string } | null>(null)
+  const [second, setSecond] = useState<{ feedback: FeedbackResult; text: string } | null>(null)
   const [error, setError] = useState<SubmitError | null>(null)
   // Synchronous guard: state updates are async, so two fast taps could
   // otherwise both pass a `submitting` check and send twice.
   const inFlight = useRef(false)
 
+  // Keep the work-in-progress on this device while the student is typing or rewriting;
+  // once a review is on screen the draft is no longer needed.
   useEffect(() => {
-    saveDraft(studentId, lesson.id, text)
-  }, [studentId, lesson.id, text])
+    if (phase === "write" || phase === "rewrite") saveDraft(studentId, lesson.id, text)
+  }, [studentId, lesson.id, text, phase])
 
   const wordCount = countWords(text)
-  const isReady =
-    wordCount >= lesson.wordCount.min &&
-    wordCount <= lesson.wordCount.max &&
+  const inRange = wordCount >= lesson.wordCount.min && wordCount <= lesson.wordCount.max
+  const reviewable =
+    wordCount >= MIN_REVIEW_WORDS &&
+    wordCount <= lesson.wordCount.max * MAX_REVIEW_WORD_FACTOR &&
     text.length <= MAX_ESSAY_CHARS
 
-  async function handleSubmit() {
-    if (inFlight.current || !isReady) return
+  /** One guarded request for either the first review or a re-review. */
+  async function review(revision?: RevisionRequest) {
+    if (inFlight.current || !reviewable) return
     inFlight.current = true
     setSubmitting(true)
     setError(null)
@@ -54,10 +64,17 @@ export default function WritingEditor({ lesson }: Props) {
         return
       }
 
-      const result = await submitFeedback(token, lesson.id, text)
+      const result = await submitFeedback(token, lesson.id, text, revision)
       if (result.ok) {
-        clearDraft(studentId, lesson.id)
-        setFeedback(result.feedback)
+        if (revision) {
+          setSecond({ feedback: result.feedback, text })
+          setPhase("rereviewed")
+          clearDraft(studentId, lesson.id)
+        } else {
+          setFirst({ feedback: result.feedback, text })
+          setPhase("reviewed")
+          clearDraft(studentId, lesson.id)
+        }
       } else {
         setError({
           message: result.message,
@@ -70,14 +87,68 @@ export default function WritingEditor({ lesson }: Props) {
     }
   }
 
-  if (feedback) {
+  function startRewrite() {
+    setError(null)
+    setPhase("rewrite")
+  }
+
+  function submitRewrite() {
+    const base = second ?? first
+    if (!base) return
+    void review({
+      previousEssay: base.text,
+      previousItems: base.feedback.priority_feedback_items.map((i) => ({
+        error_code: i.error_code,
+        original_snippet: i.original_snippet,
+      })),
+    })
+  }
+
+  if (phase === "rewrite" && (second ?? first)) {
+    const base = (second ?? first)!
+    return (
+      <RewriteMission
+        items={base.feedback.priority_feedback_items}
+        text={text}
+        onTextChange={setText}
+        reviewedText={base.text}
+        words={{ count: wordCount, min: lesson.wordCount.min, max: lesson.wordCount.max }}
+        submitting={submitting}
+        error={error}
+        onSubmit={submitRewrite}
+        onSkip={() => {
+          setText(base.text)
+          setError(null)
+          setPhase(second ? "rereviewed" : "reviewed")
+          clearDraft(studentId, lesson.id)
+        }}
+      />
+    )
+  }
+
+  if (phase === "reviewed" && first) {
     return (
       <FeedbackView
-        feedback={feedback}
-        essay={text}
+        feedback={first.feedback}
+        essay={first.text}
         day={lesson.day}
         answerExample={lesson.answerExample}
         lessonType={lesson.type}
+        onRewrite={startRewrite}
+      />
+    )
+  }
+
+  if (phase === "rereviewed" && second && first) {
+    return (
+      <FeedbackView
+        feedback={second.feedback}
+        previous={first.feedback}
+        essay={second.text}
+        day={lesson.day}
+        answerExample={lesson.answerExample}
+        lessonType={lesson.type}
+        onRewrite={startRewrite}
       />
     )
   }
@@ -128,8 +199,8 @@ export default function WritingEditor({ lesson }: Props) {
         ) : (
           <button
             type="button"
-            onClick={handleSubmit}
-            disabled={!isReady || submitting}
+            onClick={() => void review()}
+            disabled={!reviewable || submitting}
             className="rounded-full bg-indigo-600 px-8 py-3 text-sm font-semibold text-white transition-colors hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400"
           >
             {submitting
@@ -142,6 +213,12 @@ export default function WritingEditor({ lesson }: Props) {
           </button>
         )}
       </div>
+
+      {reviewable && !inRange && (
+        <p role="status" className="text-xs leading-relaxed text-amber-600">
+          語数が目安（{lesson.wordCount.min}〜{lesson.wordCount.max}語）の範囲外です。添削は受けられますが、Dayの完了には範囲内の語数が必要です。
+        </p>
+      )}
 
       {submitting && (
         <div role="status" className="flex items-center justify-center gap-3 text-sm text-gray-400">

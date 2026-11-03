@@ -43,3 +43,13 @@ export function normalizeForMatch(text: string): string {
     .trim()
     .toLowerCase()
 }
+
+/** Fewer words than this cannot be meaningfully reviewed (the AI is not called). */
+export const MIN_REVIEW_WORDS = 8
+
+/** A review is allowed up to this multiple of the lesson maximum (cost / abuse guard). */
+export const MAX_REVIEW_WORD_FACTOR = 2
+
+export function wordStatus(count: number, min: number, max: number): "TOO_SHORT" | "IN_RANGE" | "TOO_LONG" {
+  return count < min ? "TOO_SHORT" : count > max ? "TOO_LONG" : "IN_RANGE"
+}

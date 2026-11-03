@@ -1,15 +1,22 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { getLessonById } from "@/data/lessons"
+import type { Lesson } from "@/types/lesson"
 import type { StudentAccessResult } from "@/lib/auth/session"
 import {
   countWords,
   looksLikeEnglish,
   MAX_ESSAY_CHARS,
   MAX_REQUEST_BYTES,
+  MAX_REVIEW_WORD_FACTOR,
+  MIN_REVIEW_WORDS,
+  normalizeForMatch,
   stripControlChars,
+  wordStatus,
 } from "@/lib/essay"
-import { buildMessages, ChatMessage } from "@/lib/feedback/prompt"
+import { buildMessages, ChatMessage, criteriaFor, taskTypeOf } from "@/lib/feedback/prompt"
 import { parseModelFeedback } from "@/lib/feedback/validate"
+import { isErrorCode } from "@/lib/feedback/errorCodes"
+import type { RevisionRequest, WordCountAnalysis } from "@/types/feedback"
 import { getMockFeedback } from "@/lib/feedback/mock"
 import { consumeDbQuota, MemoryQuota } from "@/lib/feedback/quota"
 import { FeedbackErrorBody, FeedbackErrorCode } from "@/types/feedback"
@@ -27,6 +34,8 @@ export type FeedbackDeps = {
   /** Dev-only escape hatch; always false in production. */
   allowMock: () => boolean
   memoryQuota: MemoryQuota
+  /** Lesson lookup; injectable so tests can use an official-format fixture. Defaults to the Day1-30 data. */
+  getLesson?: (id: string) => Lesson | undefined
 }
 
 const MESSAGES: Record<FeedbackErrorCode, string> = {
@@ -96,6 +105,24 @@ async function readLimitedText(req: Request, max: number): Promise<string | null
   return new TextDecoder().decode(merged)
 }
 
+/** Validates the client-supplied previous version; returns undefined when absent, "invalid" when malformed. */
+function parseRevision(raw: unknown): RevisionRequest | undefined | "invalid" {
+  if (raw === undefined || raw === null) return undefined
+  if (typeof raw !== "object") return "invalid"
+  const { previousEssay, previousItems } = raw as { previousEssay?: unknown; previousItems?: unknown }
+  if (typeof previousEssay !== "string" || !Array.isArray(previousItems)) return "invalid"
+  const prev = stripControlChars(previousEssay).trim()
+  if (prev.length === 0 || prev.length > MAX_ESSAY_CHARS || previousItems.length > 2) return "invalid"
+  const items: RevisionRequest["previousItems"] = []
+  for (const it of previousItems) {
+    const { error_code, original_snippet } = (it ?? {}) as { error_code?: unknown; original_snippet?: unknown }
+    if (typeof error_code !== "string" || !isErrorCode(error_code)) return "invalid"
+    if (typeof original_snippet !== "string" || original_snippet.length > 300) return "invalid"
+    items.push({ error_code, original_snippet: stripControlChars(original_snippet) })
+  }
+  return { previousEssay: prev, previousItems: items }
+}
+
 export async function handleFeedbackRequest(req: Request, deps: FeedbackDeps): Promise<Response> {
   // 1. Cheap rejections first: nothing below runs for oversized or anonymous callers.
   const declaredLength = Number(req.headers.get("content-length") ?? "0")
@@ -123,17 +150,40 @@ export async function handleFeedbackRequest(req: Request, deps: FeedbackDeps): P
     return fail("invalid_request")
   }
   if (typeof body !== "object" || body === null) return fail("invalid_request")
-  const { lessonId, essay: rawEssay } = body as { lessonId?: unknown; essay?: unknown }
+  const { lessonId, essay: rawEssay, revision: rawRevision } = body as {
+    lessonId?: unknown
+    essay?: unknown
+    revision?: unknown
+  }
   if (typeof lessonId !== "string" || typeof rawEssay !== "string") return fail("invalid_request")
 
-  const lesson = getLessonById(lessonId)
+  const lesson = (deps.getLesson ?? getLessonById)(lessonId)
   if (!lesson) return fail("invalid_request")
 
   const essay = stripControlChars(rawEssay).trim()
   if (essay.length > MAX_ESSAY_CHARS) return fail("too_large")
-  const words = countWords(essay)
-  if (words < lesson.wordCount.min || words > lesson.wordCount.max) return fail("invalid_request")
+  const wordCount = countWords(essay)
+  // Any length with enough words to review is allowed: short / long answers get feedback
+  // (and a word-count notice) instead of a bare rejection. Day completion is decided
+  // from the status the client receives, not here.
+  if (wordCount < MIN_REVIEW_WORDS || wordCount > lesson.wordCount.max * MAX_REVIEW_WORD_FACTOR) {
+    return fail("invalid_request")
+  }
   if (!looksLikeEnglish(essay)) return fail("invalid_request")
+
+  const revision = parseRevision(rawRevision)
+  if (revision === "invalid") return fail("invalid_request")
+  // Re-reviewing an unchanged answer would only spend quota: refuse before any AI call.
+  if (revision && normalizeForMatch(revision.previousEssay) === normalizeForMatch(essay)) {
+    return fail("invalid_request")
+  }
+
+  const words: WordCountAnalysis = {
+    actual_count: wordCount,
+    min: lesson.wordCount.min,
+    max: lesson.wordCount.max,
+    status: wordStatus(wordCount, lesson.wordCount.min, lesson.wordCount.max),
+  }
 
   // 4. Is there any way to answer at all? (Checked before quota so a
   // misconfigured deploy doesn't burn students' allowance.)
@@ -156,22 +206,32 @@ export async function handleFeedbackRequest(req: Request, deps: FeedbackDeps): P
     }
 
     // 6. Feedback.
-    if (!aiConfigured) return json(getMockFeedback(lesson), 200)
+    if (!aiConfigured) return json(getMockFeedback(lesson, essay), 200)
 
     let raw: string | null
     try {
-      raw = await deps.generate(buildMessages(lesson, essay))
+      raw = await deps.generate(buildMessages(lesson, essay, words, revision ?? undefined))
     } catch (err) {
       console.error("[writing-tower] AI request failed", err instanceof Error ? err.name : "unknown")
       return fail("ai_failed")
     }
     if (!raw) return fail("ai_failed")
 
-    const parsed = parseModelFeedback(raw, essay)
+    const task = taskTypeOf(lesson)
+    const parsed = parseModelFeedback(raw, {
+      task,
+      exam: lesson.examFormat === true,
+      essay,
+      taskText: lesson.prompt,
+      words,
+      criteria: criteriaFor(task),
+      previousCodes: revision ? revision.previousItems.map((i) => i.error_code) : undefined,
+    })
     if (!parsed.ok) {
       console.error("[writing-tower] AI response rejected:", parsed.reason)
       return fail("ai_failed")
     }
+    if (parsed.dropped > 0) console.warn(`[writing-tower] ${parsed.dropped} unverifiable AI item(s) dropped`)
     return json(parsed.feedback, 200)
   } finally {
     deps.memoryQuota.release(auth.userId)

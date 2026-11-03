@@ -1,4 +1,4 @@
-import { FeedbackErrorBody, FeedbackErrorCode, FeedbackResult } from "@/types/feedback"
+import { FeedbackErrorBody, FeedbackErrorCode, FeedbackResult, RevisionRequest } from "@/types/feedback"
 
 export type SubmitFeedbackResult =
   | { ok: true; feedback: FeedbackResult }
@@ -8,16 +8,26 @@ const NETWORK_MESSAGE = "通信できませんでした。インターネット�
 const TIMEOUT_MESSAGE = "AI添削に時間がかかっています。少し待ってからもう一度お試しください。"
 const GENERIC_MESSAGE = "AI添削がうまくいきませんでした。もう一度お試しください。"
 
-function isFeedbackResult(value: unknown): value is FeedbackResult {
+const isStr = (v: unknown): v is string => typeof v === "string"
+
+/** Minimal shape check so a malformed response is treated as a failure, never rendered. */
+export function isFeedbackResult(value: unknown): value is FeedbackResult {
   const v = value as FeedbackResult | null
   return (
     typeof v === "object" &&
     v !== null &&
-    typeof v.praise === "string" &&
-    Array.isArray(v.goodPoints) &&
-    v.goodPoints.every((p) => typeof p === "string") &&
-    typeof v.oneImprovement === "string" &&
-    typeof v.example === "string"
+    v.version === 2 &&
+    isStr(v.overall_comment_ja) &&
+    typeof v.score_summary?.total_score === "number" &&
+    typeof v.score_summary?.max_score === "number" &&
+    typeof v.score_summary?.breakdown === "object" &&
+    typeof v.word_count_analysis?.actual_count === "number" &&
+    isStr(v.word_count_analysis?.status) &&
+    Array.isArray(v.good_points) &&
+    v.good_points.every((g) => isStr(g?.original_snippet) && isStr(g?.explanation_ja)) &&
+    Array.isArray(v.priority_feedback_items) &&
+    v.priority_feedback_items.every((i) => isStr(i?.error_code) && isStr(i?.title_ja) && isStr(i?.explanation_ja) && isStr(i?.original_snippet)) &&
+    Array.isArray(v.weakness_tags)
   )
 }
 
@@ -30,6 +40,7 @@ export async function submitFeedback(
   accessToken: string,
   lessonId: string,
   essay: string,
+  revision?: RevisionRequest,
   timeoutMs = 35_000
 ): Promise<SubmitFeedbackResult> {
   const controller = new AbortController()
@@ -38,7 +49,7 @@ export async function submitFeedback(
     const res = await fetch("/api/feedback", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
-      body: JSON.stringify({ lessonId, essay }),
+      body: JSON.stringify({ lessonId, essay, ...(revision ? { revision } : {}) }),
       signal: controller.signal,
     })
 

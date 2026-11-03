@@ -74,6 +74,15 @@ export type Lesson = {
   /** Writingステップで英語のQUESTIONの下に添える、課題の意味を取り違えないための短い日本語ヒント */
   writingHintJa?: string
   prompt: string
+  /**
+   * true only for tasks that copy the official Eiken format (e.g. an email
+   * task asking for two questions about an underlined part). Day1-30 are
+   * practice tasks, so this is unset and they are scored against their own
+   * prompt instead of exam-only rules.
+   */
+  examFormat?: boolean
+  /** The underlined part of the received email (examFormat email tasks). */
+  underlinedPhrase?: string
   wordCount: { min: number; max: number }
   timeLimit: number
   answerExample?: string

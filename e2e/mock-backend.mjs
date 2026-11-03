@@ -24,7 +24,8 @@ const freshProgress = () => ({
 })
 const state = {
   progress: freshProgress(),
-  openaiMode: "ok", // ok | error500 | badjson | slow | injected
+  openaiMode: "ok", // ok | error500 | badjson | slow | hallucinated
+  itemMode: "on", // on | none
   completeFails: false,
   quotaMode: "ok", // ok | limited
   counters: { openai: 0, completeDay: 0, quota: 0 },
@@ -64,6 +65,14 @@ function single(req, res, row) {
   return send(res, 200, row ? [row] : [])
 }
 
+const baseReply = (criteria) => ({
+  overall_comment_ja: "よく書けています。",
+  scores: Object.fromEntries(criteria.map((c) => [c, 3])),
+  score_reasons_ja: Object.fromEntries(criteria.map((c) => [c, "意味がよく伝わっています。"])),
+  good_points: [],
+  priority_feedback_items: [],
+})
+
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, "http://x")
   const p = url.pathname
@@ -84,7 +93,7 @@ const server = http.createServer(async (req, res) => {
     })
   }
   if (p === "/__reset") {
-    state.openaiMode = "ok"; state.completeFails = false; state.quotaMode = "ok"
+    state.openaiMode = "ok"; state.itemMode = "on"; state.completeFails = false; state.quotaMode = "ok"
     state.counters = { openai: 0, completeDay: 0, quota: 0 }
     state.progress = freshProgress()
     return send(res, 200, { ok: true })
@@ -148,19 +157,35 @@ const server = http.createServer(async (req, res) => {
     if (state.openaiMode === "error500") return send(res, 500, { error: { message: "simulated upstream failure" } })
     if (state.openaiMode === "slow") await new Promise((r) => setTimeout(r, 1500))
     const essay = /<student_text>\n([\s\S]*?)\n<\/student_text>/.exec(user)?.[1] ?? ""
-    const quote = essay.split(/\s+/).slice(0, 6).join(" ")
-    const content =
-      state.openaiMode === "badjson"
-        ? "Sure! Great essay."
-        : state.openaiMode === "hallucinated"
-          ? JSON.stringify({ evidence: "totally unrelated words here", praise: "よく書けています。", goodPoints: ["良い点1です。", "良い点2です。"], oneImprovement: "改善点です。", example: "This is an example sentence." })
-          : JSON.stringify({
-              evidence: quote,
-              praise: `「${quote}」から始める書き出しがはっきりしていて良いですね。`,
-              goodPoints: ["意見が最初に書けています。", "理由が整理されています。"],
-              oneImprovement: "理由に具体例を足してみましょう。",
-              example: "For example, students can look up new words in class.",
-            })
+    const isEmail = /Task type: EMAIL/.test(user)
+    const words = essay.split(/\s+/).filter(Boolean)
+    const quote = words.slice(0, 6).join(" ")
+    const criteria = isEmail ? ["content", "vocabulary", "grammar"] : ["content", "structure", "vocabulary", "grammar"]
+    // one small form problem in the first five words: "w0 w1 w2 w3 w4" should read "w0 w1 really w2 w3 w4"
+    const original = words.slice(0, 5).join(" ")
+    const suggested = [words[0], words[1], "really", words[2], words[3], words[4]].join(" ")
+    const blank = [words[0], words[1], "___", words[2], words[3], words[4]].join(" ")
+    const norm = (t) => t.replace(/\s+/g, " ").trim().toLowerCase()
+    const prevItems = JSON.parse(/<previous_items>\n([\s\S]*?)\n<\/previous_items>/.exec(user)?.[1] ?? "[]")
+    const stillThere = norm(essay).includes(norm(original))
+    const item = {
+      error_code: "ERR_GRAMMAR", title_ja: "言葉を足してみよう", explanation_ja: "ここに really を入れると、気持ちがより伝わります。",
+      original_snippet: original, task_snippet: "", suggested_snippet: suggested,
+      fill_blank: { prompt: blank, acceptable_answers: ["really"] },
+    }
+    const reply =
+      state.openaiMode === "hallucinated"
+        ? { ...baseReply(criteria), good_points: [{ original_snippet: "totally unrelated words here", explanation_ja: "良い点です。" }] }
+        : {
+            ...baseReply(criteria),
+            overall_comment_ja: `「${quote}」から始める書き出しがはっきりしていて良いですね。`,
+            good_points: [{ original_snippet: quote, explanation_ja: "書き出しがはっきりしています。" }],
+            priority_feedback_items: state.itemMode === "none" || (prevItems.length > 0 && !stillThere) ? [] : [item],
+            ...(prevItems.length > 0
+              ? { revision_check: prevItems.map((p) => ({ error_code: p.error_code, status: norm(essay).includes(norm(p.original_snippet)) ? "NOT_FIXED" : "FIXED", comment_ja: norm(essay).includes(norm(p.original_snippet)) ? "まだ直っていません。" : "直せました。よくできました。" })) }
+              : {}),
+          }
+    const content = state.openaiMode === "badjson" ? "Sure! Great essay." : JSON.stringify(reply)
     return send(res, 200, { id: "x", object: "chat.completion", created: 0, model: body.model, choices: [{ index: 0, finish_reason: "stop", message: { role: "assistant", content } }], usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 } })
   }
 

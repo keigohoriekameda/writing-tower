@@ -5,6 +5,7 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/client"
 import { loadLocalProgress, saveLocalProgress } from "@/lib/localProgress"
 import { getCloudProgress, completeDayCloud } from "@/lib/progress/cloud"
 import { ProgressSync, SyncSnapshot } from "@/lib/progress/sync"
+import { getProgressSync } from "@/lib/progress/registry"
 import { useStudent } from "@/components/StudentGate"
 
 const LOAD_ERROR_MESSAGE =
@@ -16,30 +17,35 @@ const SERVER_SNAPSHOT: SyncSnapshot = { progress: { completedDays: [] }, status:
 
 /**
  * Progress for the signed-in student (must be rendered inside StudentGate).
- * A fresh ProgressSync is created per student, so switching accounts can
- * never carry one student's days into another's view.
+ * One ProgressSync per student is shared by all components (see registry),
+ * and it is cleared on sign-out, so switching accounts can never carry one
+ * student's days into another's view.
  */
 export function useProgress() {
   const { userId, studentId } = useStudent()
 
   const sync = useMemo(() => {
     const supabase = createSupabaseBrowserClient()
-    return new ProgressSync(
-      {
-        getProgress: () => getCloudProgress(supabase, userId),
-        completeDay: (day) => completeDayCloud(supabase, day),
-      },
-      {
-        load: () => loadLocalProgress(studentId),
-        save: (p) => saveLocalProgress(studentId, p),
-      }
+    return getProgressSync(
+      userId,
+      () =>
+        new ProgressSync(
+          {
+            getProgress: () => getCloudProgress(supabase, userId),
+            completeDay: (day) => completeDayCloud(supabase, day),
+          },
+          {
+            load: () => loadLocalProgress(studentId),
+            save: (p) => saveLocalProgress(studentId, p),
+          }
+        )
     )
   }, [userId, studentId])
 
   const snapshot = useSyncExternalStore(sync.subscribe, sync.getSnapshot, () => SERVER_SNAPSHOT)
 
   useEffect(() => {
-    void sync.load()
+    void sync.ensureLoaded()
     const onOnline = () => void sync.resync()
     window.addEventListener("online", onOnline)
     return () => window.removeEventListener("online", onOnline)

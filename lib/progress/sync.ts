@@ -35,7 +35,10 @@ export class ProgressSync {
   private status: SyncStatus = "ok"
   private confirmed = new Set<number>()
   private inflight = new Map<number, Promise<boolean>>()
+  /** Days whose last cloud save attempt failed. Only these count as a save failure. */
+  private failed = new Set<number>()
   private loaded = false
+  private loading: Promise<void> | undefined
   private listeners = new Set<() => void>()
   private snapshot: SyncSnapshot = { progress: this.progress, status: this.status }
 
@@ -65,6 +68,16 @@ export class ProgressSync {
     this.store.save(next)
   }
 
+  /** Loads once; concurrent callers share the request, and a failed load can be retried by calling again. */
+  ensureLoaded(): Promise<void> {
+    if (!this.loading) {
+      this.loading = this.load().finally(() => {
+        if (!this.loaded) this.loading = undefined
+      })
+    }
+    return this.loading
+  }
+
   /** Initial load: restores progress from the cloud (e.g. first login on another device) and pushes up anything only held locally. */
   async load(): Promise<void> {
     let cloud: Progress
@@ -77,7 +90,9 @@ export class ProgressSync {
       return
     }
 
-    this.confirmed = new Set(cloud.completedDays.map((d) => d.day))
+    // Add to, never replace: a day confirmed by a save that finished while this (older)
+    // read was in flight must stay confirmed, or it would be sent a second time.
+    for (const d of cloud.completedDays) this.confirmed.add(d.day)
     this.loaded = true
     // this.progress already contains the local cache plus any completion
     // made while we were waiting; the cloud only ever adds to it.
@@ -121,9 +136,11 @@ export class ProgressSync {
       try {
         await this.cloud.completeDay(day)
         this.confirmed.add(day)
+        this.failed.delete(day)
         return true
       } catch (err) {
         console.error(`[writing-tower] failed to save Day ${day} to Supabase`, err)
+        this.failed.add(day)
         return false
       } finally {
         this.inflight.delete(day)
@@ -136,11 +153,12 @@ export class ProgressSync {
 
   private refreshStatus(): void {
     if (this.status === "loadFailed") return
-    const unsynced = this.progress.completedDays.some((d) => !this.confirmed.has(d.day))
-    // While a retry is still in flight the outcome is unknown: keep showing
-    // the current status instead of flickering the error banner away.
-    if (unsynced && this.inflight.size > 0) return
-    const next: SyncStatus = unsynced ? "saveFailed" : "ok"
+    // A day that simply hasn't been sent yet (e.g. the initial load is still
+    // running) is not a failure; only a failed attempt is. While a retry is
+    // in flight the outcome is unknown: keep showing the current status
+    // instead of flickering the banner away.
+    if (this.failed.size > 0 && this.inflight.size > 0) return
+    const next: SyncStatus = this.failed.size > 0 ? "saveFailed" : "ok"
     if (next !== this.status) {
       this.status = next
       this.publish()

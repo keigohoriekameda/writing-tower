@@ -158,3 +158,81 @@ describe("ProgressSync status stability", () => {
     expect(sync.getSnapshot().status).toBe("saveFailed")
   })
 })
+
+describe("ProgressSync sharing", () => {
+  it("ensureLoaded reads the cloud once however many components ask, and retries after a failed load", async () => {
+    const cloud = fakeCloud([1, 2])
+    const sync = new ProgressSync(cloud, memStore())
+    await Promise.all([sync.ensureLoaded(), sync.ensureLoaded(), sync.ensureLoaded()])
+    await sync.ensureLoaded()
+    expect(cloud.getProgress).toHaveBeenCalledTimes(1)
+
+    const flaky = fakeCloud([1])
+    flaky.fail = true
+    const s2 = new ProgressSync(flaky, memStore())
+    await s2.ensureLoaded()
+    expect(s2.getSnapshot().status).toBe("loadFailed")
+    flaky.fail = false
+    await s2.ensureLoaded()
+    expect(days(s2)).toEqual([1])
+    expect(s2.getSnapshot().status).toBe("ok")
+  })
+
+  it("a day already confirmed by the cloud is never sent again by a later screen", async () => {
+    const cloud = fakeCloud([6])
+    const sync = new ProgressSync(cloud, memStore())
+    await sync.ensureLoaded()
+    await sync.complete(6) // e.g. the re-review screen mounting
+    expect(cloud.completeDay).not.toHaveBeenCalled()
+  })
+})
+
+import { clearProgressSyncs, getProgressSync } from "@/lib/progress/registry"
+describe("progress registry", () => {
+  it("shares one instance per student, separates students, and forgets everything on sign-out", () => {
+    clearProgressSyncs()
+    const mk = () => new ProgressSync(fakeCloud(), memStore())
+    const a1 = getProgressSync("a", mk)
+    expect(getProgressSync("a", mk)).toBe(a1)
+    expect(getProgressSync("b", mk)).not.toBe(a1)
+    clearProgressSyncs()
+    expect(getProgressSync("a", mk)).not.toBe(a1)
+  })
+})
+
+describe("ProgressSync does not raise a false save-failure alarm", () => {
+  it("completing a day before the initial load finishes never shows saveFailed when the cloud is fine", async () => {
+    const cloud = fakeCloud([1, 2])
+    const store = memStore({ completedDays: [day(1), day(2)] })
+    const sync = new ProgressSync(cloud, store)
+    const seen: string[] = []
+    sync.subscribe(() => seen.push(sync.getSnapshot().status))
+    const loading = sync.ensureLoaded()
+    await sync.complete(6) // the review screen mounting right away
+    await loading
+    expect(seen.every((s) => s === "ok")).toBe(true)
+    expect(sync.getSnapshot().status).toBe("ok")
+    expect(days(sync)).toEqual([1, 2, 6])
+  })
+})
+
+describe("ProgressSync load/complete race", () => {
+  it("a save that finishes while an older cloud read is in flight is not sent again", async () => {
+    const cloud = fakeCloud([1])
+    let releaseRead!: () => void
+    const readGate = new Promise<void>((r) => (releaseRead = r))
+    const original = cloud.getProgress.getMockImplementation()!
+    // the read is taken BEFORE day 6 reaches the cloud, then delivered late
+    cloud.getProgress.mockImplementation(async () => {
+      const snapshot = await original()
+      await readGate
+      return snapshot
+    })
+    const sync = new ProgressSync(cloud, memStore())
+    const loading = sync.ensureLoaded()
+    await sync.complete(6) // saved and confirmed while the read is still pending
+    releaseRead()
+    await loading
+    expect(cloud.completeDay).toHaveBeenCalledTimes(1)
+  })
+})
